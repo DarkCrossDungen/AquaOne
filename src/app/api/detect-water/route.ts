@@ -9,12 +9,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ isWater: false, waterBodyName: null, waterType: null, source: 'error' });
   }
 
-  // Method 1: OpenStreetMap Overpass API — checks for water features within 50m radius
+  // Method 1: OpenStreetMap Overpass API — expanded query with 200m radius
+  // Checks rivers, lakes, canals, coastlines, bays, seas, reservoirs, wetlands
   try {
-    const query = `[out:json][timeout:5];(way["natural"="water"](around:50,${lat},${lng});way["waterway"](around:50,${lat},${lng});way["water"](around:50,${lat},${lng});relation["natural"="water"](around:50,${lat},${lng});relation["waterway"](around:50,${lat},${lng}););out tags 1;`;
+    const query = `[out:json][timeout:6];(
+      way["natural"="water"](around:200,${lat},${lng});
+      way["waterway"](around:200,${lat},${lng});
+      way["water"](around:200,${lat},${lng});
+      way["natural"="coastline"](around:200,${lat},${lng});
+      way["natural"="bay"](around:200,${lat},${lng});
+      way["natural"="strait"](around:200,${lat},${lng});
+      way["natural"="wetland"](around:200,${lat},${lng});
+      way["landuse"="reservoir"](around:200,${lat},${lng});
+      way["landuse"="basin"](around:200,${lat},${lng});
+      way["leisure"="marina"](around:200,${lat},${lng});
+      relation["natural"="water"](around:200,${lat},${lng});
+      relation["waterway"](around:200,${lat},${lng});
+      relation["natural"="coastline"](around:200,${lat},${lng});
+      relation["natural"="bay"](around:200,${lat},${lng});
+      relation["place"="sea"](around:500,${lat},${lng});
+      relation["place"="ocean"](around:500,${lat},${lng});
+    );out tags 1;`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     const res = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
@@ -30,35 +48,28 @@ export async function GET(request: Request) {
       const elements = data.elements || [];
       if (elements.length > 0) {
         const tags = elements[0]?.tags || {};
-        const name = tags.name || tags.waterway || tags.natural || 'Water Body';
-        const waterType = tags.waterway || tags.natural || tags.water || 'water';
+        const name = tags.name || tags.waterway || tags.natural || tags.place || 'Water Body';
+        const waterType = tags.waterway || tags.natural || tags.water || tags.place || tags.landuse || 'water';
         return NextResponse.json({
           isWater: true,
           waterBodyName: name,
           waterType,
           source: 'OpenStreetMap Overpass API',
         });
-      } else {
-        // Overpass found no water features — confirmed dry land
-        return NextResponse.json({
-          isWater: false,
-          waterBodyName: null,
-          waterType: null,
-          source: 'OpenStreetMap Overpass API',
-        });
       }
+      // Overpass found nothing — try Nominatim before declaring land
     }
   } catch (err) {
     console.warn('Overpass API note:', err instanceof Error ? err.message : 'timeout');
   }
 
-  // Method 2: Nominatim Reverse Geocoding Fallback
+  // Method 2: Nominatim Reverse Geocoding — broader water type detection
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), 3500);
 
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`,
       {
         signal: controller.signal,
         headers: { 'User-Agent': 'AquaLens-Sentinel/1.0 (IEEE-Hackathon)' },
@@ -69,19 +80,50 @@ export async function GET(request: Request) {
 
     if (res.ok) {
       const data = await res.json();
+
+      // Check for Nominatim "error" responses — points in open ocean return this
+      if (data.error === 'Unable to geocode') {
+        return NextResponse.json({
+          isWater: true,
+          waterBodyName: 'Open Ocean / Sea',
+          waterType: 'ocean',
+          source: 'Nominatim (ocean inference)',
+        });
+      }
+
       const category = (data.category || '').toLowerCase();
       const type = (data.type || '').toLowerCase();
+      const displayName = (data.display_name || '').toLowerCase();
+      const addressKeys = Object.keys(data.address || {}).map(k => k.toLowerCase());
 
-      const waterCategories = ['waterway', 'natural'];
-      const waterTypes = ['water', 'river', 'lake', 'stream', 'canal', 'reservoir', 'pond', 'sea', 'ocean', 'wetland', 'riverbank', 'drain', 'ditch', 'dock', 'basin'];
+      // Direct category/type match
+      const waterCategories = ['waterway', 'natural', 'place'];
+      const waterTypes = [
+        'water', 'river', 'lake', 'stream', 'canal', 'reservoir', 'pond',
+        'sea', 'ocean', 'wetland', 'riverbank', 'drain', 'ditch', 'dock',
+        'basin', 'bay', 'strait', 'coastline', 'beach', 'harbour', 'marina',
+      ];
 
-      const isWater = (waterCategories.includes(category) && waterTypes.includes(type)) || waterTypes.includes(category);
+      const isDirectMatch = waterCategories.includes(category) && waterTypes.includes(type);
+      const isTypeMatch = waterTypes.includes(type) || waterTypes.includes(category);
+
+      // Check if display_name or address contains water keywords
+      const waterKeywords = [
+        'river', 'lake', 'ocean', 'sea', 'canal', 'bay', 'strait',
+        'creek', 'stream', 'harbour', 'harbor', 'port', 'marina',
+        'lagoon', 'estuary', 'delta', 'reservoir', 'pond', 'waterway',
+        'atlantic', 'pacific', 'indian', 'mediterranean', 'gulf', 'fjord',
+      ];
+      const hasWaterKeyword = waterKeywords.some(kw => displayName.includes(kw));
+      const hasWaterAddress = addressKeys.some(k => waterKeywords.includes(k));
+
+      const isWater = isDirectMatch || isTypeMatch || hasWaterKeyword || hasWaterAddress;
       const name = data.name || data.display_name?.split(',')[0] || null;
 
       return NextResponse.json({
         isWater,
         waterBodyName: isWater ? name : null,
-        waterType: isWater ? type : category,
+        waterType: isWater ? (type || category) : category,
         source: 'Nominatim',
       });
     }
@@ -89,6 +131,6 @@ export async function GET(request: Request) {
     console.warn('Nominatim note:', err instanceof Error ? err.message : 'timeout');
   }
 
-  // Both APIs failed — return unknown (conservative: treat as land)
+  // Both APIs failed — conservative fallback
   return NextResponse.json({ isWater: false, waterBodyName: null, waterType: null, source: 'fallback' });
 }
