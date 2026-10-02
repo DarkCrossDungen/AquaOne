@@ -4,11 +4,16 @@
 > **Primary Track:** Track 2 — Data-to-Insight  
 > **Cross-Cutting Tracks:** Track 6 (Resilience Informatics) & Track 7 (Digital Health Standards / HL7 FHIR)
 
+[![Live Demo: Online](https://img.shields.io/badge/Live%20Demo-time--rho--one.vercel.app-FFE500.svg)](https://time-rho-one.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![Standards: HL7 FHIR R4](https://img.shields.io/badge/Standards-HL7%20FHIR%20R4-FFE500.svg)](https://hl7.org/fhir/)
 [![Earth Observation: Copernicus Sentinel-2](https://img.shields.io/badge/Copernicus-Sentinel--2%20MSI-black.svg)](https://dataspace.copernicus.eu/)
 [![Framework: Next.js 15](https://img.shields.io/badge/Framework-Next.js%2015%20App%20Router-black.svg)](https://nextjs.org/)
 [![Developer Handbook: Complete](https://img.shields.io/badge/Developer%20Handbook-Complete-FFE500.svg)](HACKATHON_DEVELOPER_HANDBOOK.md)
+
+> 🚀 **Live Production Deployment:** [https://time-rho-one.vercel.app](https://time-rho-one.vercel.app)  
+> 🛰️ **Operational Satellite Sentinel:** [https://time-rho-one.vercel.app/sentinel](https://time-rho-one.vercel.app/sentinel)  
+> 🏥 **Live HL7 FHIR Healthcare API:** [https://time-rho-one.vercel.app/api/fhir](https://time-rho-one.vercel.app/api/fhir)
 
 ---
 
