@@ -76,6 +76,21 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
         const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
         const isWater = distKm <= 4.2;
 
+        const distFromPlume = Math.sqrt(
+          Math.pow((latFixed - basin.plume.lat) * 111, 2) +
+          Math.pow((lngFixed - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
+        );
+
+        const localWqi = isWater
+          ? Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlume * 4.2, 28)))
+          : 0;
+        const localChl = isWater
+          ? Math.max(9.0, Number((basin.plume.chlorophyllConcentrationMgM3 - Math.min(distFromPlume * 7.5, 45)).toFixed(1)))
+          : 0;
+        const localDO = isWater
+          ? Math.min(7.8, Number((basin.spectralStats.dissolvedOxygenMgL + Math.min(distFromPlume * 0.5, 3.2)).toFixed(1)))
+          : 0;
+
         if (userPinMarker) {
           userPinMarker.remove();
         }
@@ -105,23 +120,25 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
             </div>
 
             <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #08080A;">
-              ${isWater ? 'Water Health: DANGEROUS / TOXIC' : 'Surface: Dry Ground / Landmark'}
+              ${isWater ? (localWqi < 40 ? 'Water Health: DANGEROUS / TOXIC' : 'Water Health: MODERATE POLLUTION') : 'Surface: Dry Ground / Landmark'}
             </div>
 
             <div style="font-size: 12px; color: #333333; margin-bottom: 8px; line-height: 1.35;">
               ${isWater
-                ? '<strong>In Simple Words:</strong> Satellite cameras detected poisonous blue-green algae and high pollution here. Do not swim or drink.'
+                ? (localWqi < 40
+                    ? '<strong>In Simple Words:</strong> Satellite cameras detected poisonous blue-green algae and high pollution here. Do not swim or drink.'
+                    : '<strong>In Simple Words:</strong> River channel with moderate downstream dilution. Caution advised.')
                 : '<strong>In Simple Words:</strong> This is dry ground (soil, roads, or buildings). Not a river.'
               }
             </div>
 
             ${isWater ? `
               <div style="background: #F7F7F8; padding: 8px; border-radius: 8px; border: 1px solid rgba(8,8,10,0.08); font-family: monospace; font-size: 11px; margin-bottom: 6px;">
-                <div style="margin-bottom: 2px;">• Overall Water Score: <strong style="color: #08080A;">${basin.plume.wqiEquivalent}/100 [Unsafe]</strong></div>
-                <div style="margin-bottom: 2px;">• Algae Poison (WHO ≤ 10 µg/L): <strong style="color: #DC2626;">${basin.plume.chlorophyllConcentrationMgM3} µg/L [Violates WHO]</strong></div>
-                <div style="margin-bottom: 2px;">• Oxygen Level (WHO ≥ 5.0 mg/L): <strong style="color: #DC2626;">${basin.spectralStats.dissolvedOxygenMgL} mg/L [Suffocating]</strong></div>
-                <div style="margin-bottom: 4px;">• WHO Status: <strong style="color: #08080A;">${basin.whoRegistryStatus.escalationRequired ? '⚠️ Unreported Acute Spike' : 'Known Non-Potable'}</strong></div>
-                <div>• Can I swim?: <strong style="color: #DC2626;">NO - DANGEROUS</strong></div>
+                <div style="margin-bottom: 2px;">• Local Water Score: <strong style="color: #08080A;">${localWqi}/100 [${localWqi < 40 ? 'Unsafe' : 'Moderate'}]</strong></div>
+                <div style="margin-bottom: 2px;">• Algae Poison (WHO ≤ 10 µg/L): <strong style="color: ${localChl > 10 ? '#DC2626' : '#08080A'};">${localChl} µg/L [${localChl > 10 ? 'Violates WHO' : 'Normal'}]</strong></div>
+                <div style="margin-bottom: 2px;">• Oxygen Level (WHO ≥ 5.0 mg/L): <strong style="color: ${localDO < 5 ? '#DC2626' : '#08080A'};">${localDO} mg/L [${localDO < 5 ? 'Low Oxygen' : 'Adequate'}]</strong></div>
+                <div style="margin-bottom: 4px;">• Plume Distance: <strong style="color: #08080A;">${distFromPlume.toFixed(2)} km from origin</strong></div>
+                <div>• Can I swim?: <strong style="color: ${localWqi < 50 ? '#DC2626' : '#16A34A'};">${localWqi < 50 ? 'NO - DANGEROUS' : 'CAUTION'}</strong></div>
               </div>
               <div style="margin-bottom: 4px;">
                 <a href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health" target="_blank" rel="noopener noreferrer" style="font-size: 10px; font-weight: 700; color: #08080A; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
@@ -335,6 +352,14 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
         const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
         const isWaterBody = distKm <= 4.2;
 
+        const distFromPlume = Math.sqrt(
+          Math.pow((clickedCoords.lat - basin.plume.lat) * 111, 2) +
+          Math.pow((clickedCoords.lng - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
+        );
+        const localWqi = isWaterBody
+          ? Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlume * 4.2, 28)))
+          : 0;
+
         return (
           <div className="absolute bottom-5 left-5 z-[1000] bg-white/95 backdrop-blur-xl p-4 rounded-2xl border border-editorial-hairline shadow-floating text-xs font-mono max-w-sm">
             <div className="flex items-center justify-between border-b border-editorial-hairline pb-2 mb-2.5">
@@ -366,7 +391,7 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
               <div>LAT: <span className="font-bold text-black">{clickedCoords.lat}</span></div>
               <div>LNG: <span className="font-bold text-black">{clickedCoords.lng}</span></div>
               <div>NDWI Index: <span className="font-bold text-black">{isWaterBody ? `+${basin.spectralStats.ndwiMean}` : '-0.14'}</span></div>
-              <div>Toxin Level: <strong className="text-black">{isWaterBody ? `${basin.plume.wqiEquivalent}/100 [Severe]` : 'N/A (Dry Soil)'}</strong></div>
+              <div>Toxin Level: <strong className="text-black">{isWaterBody ? `${localWqi}/100 [${localWqi < 40 ? 'Severe' : 'Moderate'}]` : 'N/A (Dry Soil)'}</strong></div>
             </div>
 
             {isWaterBody && (

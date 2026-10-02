@@ -83,6 +83,23 @@ export default function SentinelPlatform() {
     }
   };
 
+  const isCustomScanActive = customLat !== currentBasin.center[0].toString() || customLng !== currentBasin.center[1].toString();
+  const displayWqi = (isCustomScanActive && apiTelemetry?.opticalIndices?.wqi !== undefined)
+    ? apiTelemetry.opticalIndices.wqi
+    : currentBasin.plume.wqiEquivalent;
+  const displayChlorophyll = (isCustomScanActive && apiTelemetry?.opticalIndices?.chlorophyllUgL !== undefined)
+    ? apiTelemetry.opticalIndices.chlorophyllUgL
+    : currentBasin.plume.chlorophyllConcentrationMgM3;
+  const displayDO = (isCustomScanActive && apiTelemetry?.opticalIndices?.dissolvedOxygenMgL !== undefined)
+    ? apiTelemetry.opticalIndices.dissolvedOxygenMgL
+    : currentBasin.spectralStats.dissolvedOxygenMgL;
+  const displayTurbidity = (isCustomScanActive && apiTelemetry?.opticalIndices?.turbidityNtu !== undefined)
+    ? apiTelemetry.opticalIndices.turbidityNtu
+    : currentBasin.spectralStats.turbidityNtu;
+  const displayFlowSpeed = (isCustomScanActive && apiTelemetry?.hydrologyTelemetry?.flowVelocityKmH !== undefined)
+    ? apiTelemetry.hydrologyTelemetry.flowVelocityKmH
+    : currentBasin.plume.flowVelocityKmH;
+
   return (
     <div className="flex-1 flex flex-col bg-white text-black min-h-screen">
       {/* Universal Multi-Page Navbar */}
@@ -130,6 +147,10 @@ export default function SentinelPlatform() {
                     onClick={() => {
                       setCurrentBasin(b);
                       setSelectedPOI(null);
+                      setCustomLat(b.center[0].toString());
+                      setCustomLng(b.center[1].toString());
+                      setApiTelemetry(null);
+                      querySatelliteApi(b.center[0], b.center[1], b.id);
                     }}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-mono uppercase font-bold transition-all duration-200 ${
                       isSelected
@@ -160,9 +181,11 @@ export default function SentinelPlatform() {
                   </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black uppercase text-white font-sans mt-1">
-                  {currentBasin.plume.wqiEquivalent < 40
+                  {displayWqi < 40
                     ? '⚠️ Overall Water Verdict: DANGEROUS / TOXIC'
-                    : '🟡 Overall Water Verdict: MODERATE POLLUTION'
+                    : displayWqi < 60
+                    ? '🟡 Overall Water Verdict: MODERATE POLLUTION'
+                    : '✅ Overall Water Verdict: ACCEPTABLE QUALITY'
                   }
                 </h3>
               </div>
@@ -170,10 +193,18 @@ export default function SentinelPlatform() {
               <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl shrink-0">
                 <span className="text-xs text-[#CCCCCC] font-mono uppercase">Water Score</span>
                 <span className="text-2xl sm:text-3xl font-black text-[#FFE500] font-mono">
-                  {currentBasin.plume.wqiEquivalent}/100
+                  {displayWqi}/100
                 </span>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-600/40 text-white font-mono">
-                  Unsafe
+                <span
+                  className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded font-mono ${
+                    displayWqi < 40
+                      ? 'bg-red-600/40 text-white'
+                      : displayWqi < 60
+                      ? 'bg-amber-500/40 text-white'
+                      : 'bg-green-600/40 text-white'
+                  }`}
+                >
+                  {displayWqi < 40 ? 'Unsafe' : displayWqi < 60 ? 'Moderate' : 'Good'}
                 </span>
               </div>
             </div>
@@ -183,12 +214,12 @@ export default function SentinelPlatform() {
               {/* Card 1: Toxicity & Algae Poison */}
               <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
                 <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">1. Poison Algae Level</div>
-                <div className="text-base font-black text-[#FFE500]">{currentBasin.plume.chlorophyllConcentrationMgM3} µg/L</div>
+                <div className="text-base font-black text-[#FFE500]">{displayChlorophyll} µg/L</div>
                 <div className="font-bold text-white text-[11px] uppercase">
-                  {currentBasin.plume.chlorophyllConcentrationMgM3 >= 50 ? '⚠️ High Poison Risk' : 'Moderate Algae'}
+                  {displayChlorophyll >= 50 ? '⚠️ High Poison Risk' : displayChlorophyll > 10 ? 'Moderate Algae' : 'Low Algae'}
                 </div>
                 <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
-                  <strong>In Simple Words:</strong> Thick green scum of poisonous bacteria (algae) is growing in the water.
+                  <strong>In Simple Words:</strong> {displayChlorophyll >= 50 ? 'Thick green scum of poisonous bacteria (algae) is growing in the water.' : 'Water contains active algae concentrations.'}
                 </p>
                 <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
                   🔬 IEEE: Chlorophyll-a via NDCI · LOINC 79177-2
@@ -198,12 +229,12 @@ export default function SentinelPlatform() {
               {/* Card 2: Dissolved Oxygen */}
               <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
                 <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">2. Oxygen in Water</div>
-                <div className="text-base font-black text-[#FFE500]">{currentBasin.spectralStats.dissolvedOxygenMgL} mg/L</div>
+                <div className="text-base font-black text-[#FFE500]">{displayDO} mg/L</div>
                 <div className="font-bold text-white text-[11px] uppercase">
-                  {currentBasin.spectralStats.dissolvedOxygenMgL < 4.0 ? '🚨 Very Low (Hypoxia)' : 'Low Oxygen'}
+                  {displayDO < 4.0 ? '🚨 Very Low (Hypoxia)' : displayDO < 6.0 ? 'Low Oxygen' : 'Adequate Oxygen'}
                 </div>
                 <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
-                  <strong>In Simple Words:</strong> The water does not have enough air. Fish and river plants are suffocating.
+                  <strong>In Simple Words:</strong> {displayDO < 4.0 ? 'The water does not have enough air. Fish and river plants are suffocating.' : 'Moderate air level for river life.'}
                 </p>
                 <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
                   🔬 IEEE: Critical Hypoxia threshold &lt; 4.0 mg/L
@@ -213,9 +244,9 @@ export default function SentinelPlatform() {
               {/* Card 3: Water Cloudiness / Mud */}
               <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
                 <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">3. Mud & Cloudiness</div>
-                <div className="text-base font-black text-[#FFE500]">{currentBasin.spectralStats.turbidityNtu} NTU</div>
+                <div className="text-base font-black text-[#FFE500]">{displayTurbidity} NTU</div>
                 <div className="font-bold text-white text-[11px] uppercase">
-                  {currentBasin.spectralStats.turbidityNtu > 25 ? '⚠️ Very Dirty & Muddy' : 'Clean Water'}
+                  {displayTurbidity > 25 ? '⚠️ Very Dirty & Muddy' : 'Clean Water'}
                 </div>
                 <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
                   <strong>In Simple Words:</strong> Dirt and city sewer runoff have made the water cloudy and brown.
@@ -228,7 +259,7 @@ export default function SentinelPlatform() {
               {/* Card 4: Water Movement & Speed */}
               <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
                 <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">4. Flow Speed & Spread</div>
-                <div className="text-base font-black text-[#FFE500]">{currentBasin.plume.flowVelocityKmH} km/h</div>
+                <div className="text-base font-black text-[#FFE500]">{displayFlowSpeed} km/h</div>
                 <div className="font-bold text-white text-[11px] uppercase">Moving Downstream</div>
                 <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
                   <strong>In Simple Words:</strong> The river is carrying the poisonous water down toward swimming spots and parks.

@@ -139,27 +139,36 @@ export const TimeMachineSlider: React.FC<TimeMachineSliderProps> = ({ basin }) =
 
       {/* 4 Simplified Plain-English Impact Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
-        <div className="p-4 rounded-2xl bg-surface-subtle border border-editorial-hairline shadow-softPill space-y-1">
-          <span className="text-[10px] tracking-wider uppercase text-editorial-light font-semibold">
-            Toxic Algae Spike
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-black">+620%</div>
-          <span className="text-[11px] font-semibold text-black bg-[#FFE500] px-2 py-0.5 rounded inline-block">
-            Severe Bloom Active
-          </span>
-          <p className="text-[10px] text-editorial-muted pt-1">Causes stomach illness & rashes</p>
-        </div>
+        {(() => {
+          const algaePct = Math.max(80, Math.round(((basin.plume.chlorophyllConcentrationMgM3 - 10) / 10) * 100));
+          const turbPct = Math.max(60, Math.round(((basin.spectralStats.turbidityNtu - 5) / 5) * 100));
 
-        <div className="p-4 rounded-2xl bg-surface-subtle border border-editorial-hairline shadow-softPill space-y-1">
-          <span className="text-[10px] tracking-wider uppercase text-editorial-light font-semibold">
-            Water Cloudiness
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-black">+480%</div>
-          <span className="text-[11px] font-semibold text-black bg-white px-2 py-0.5 rounded border border-editorial-hairline inline-block">
-            Mud & Sewage Runoff
-          </span>
-          <p className="text-[10px] text-editorial-muted pt-1">Suspended particles in water</p>
-        </div>
+          return (
+            <>
+              <div className="p-4 rounded-2xl bg-surface-subtle border border-editorial-hairline shadow-softPill space-y-1">
+                <span className="text-[10px] tracking-wider uppercase text-editorial-light font-semibold">
+                  Toxic Algae Spike
+                </span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-black">+{algaePct}%</div>
+                <span className="text-[11px] font-semibold text-black bg-[#FFE500] px-2 py-0.5 rounded inline-block">
+                  Severe Bloom Active
+                </span>
+                <p className="text-[10px] text-editorial-muted pt-1">Causes stomach illness & rashes</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-surface-subtle border border-editorial-hairline shadow-softPill space-y-1">
+                <span className="text-[10px] tracking-wider uppercase text-editorial-light font-semibold">
+                  Water Cloudiness
+                </span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-black">+{turbPct}%</div>
+                <span className="text-[11px] font-semibold text-black bg-white px-2 py-0.5 rounded border border-editorial-hairline inline-block">
+                  Mud & Sewage Runoff
+                </span>
+                <p className="text-[10px] text-editorial-muted pt-1">Suspended particles in water</p>
+              </div>
+            </>
+          );
+        })()}
 
         <div className="p-4 rounded-2xl bg-surface-subtle border border-editorial-hairline shadow-softPill space-y-1">
           <span className="text-[10px] tracking-wider uppercase text-editorial-light font-semibold">
