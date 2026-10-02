@@ -140,8 +140,47 @@ Directly below the river selector bar, four live telemetry cards display:
 
 ---
 
-## 🔬 How Does the Satellite Know "River" vs "Dry Land"?
+---
 
+## 🔬 Multi-Layer Waterway & Small River Detection Engine
+
+AquaLens includes an autonomous multi-layer surface detection engine that instantly identifies whether a clicked coordinate is **dry land or an active water body** — including **small rivers, narrow streams, canals, and tributaries**:
+
+```
+                                [ User Clicks Coordinate on Map ]
+                                                │
+                                                ▼
+        ┌───────────────────────────────────────────────────────────────────────────────┐
+        │ 🛰️ Multi-Layer Hydrographic Detection Engine (/api/detect-water)              │
+        ├───────────────────────────────────────────────────────────────────────────────┤
+        │  1. OpenStreetMap Overpass API (400m radius): streams, canals, rivers, drains │
+        │  2. Open-Meteo Global Hydro Network: checks active discharge (>0 m³/s)        │
+        │  3. Regional Pilot Corridor Proximity: identifies known river catchments      │
+        │  4. Ocean & Coastal Geo-Inference: identifies bays, seas, and coastlines      │
+        └──────────────────────────────────────┬────────────────────────────────────────┘
+                                                │
+                       ┌────────────────────────┴────────────────────────┐
+                       ▼                                                 ▼
+             [ Waterway Verified 🌊 ]                          [ Dry Ground / Bank 🏛️ ]
+                       │                                                 │
+          • Shows Verified River Name                         • Shows "Terrestrial Land" Card
+          • Runs Space Toxicity Telemetry                     • Offers "Scan as Waterway" Button
+          • Pushes Metrics to Dashboard                       • (Never blocks user from scanning)
+```
+
+### 1. High-Precision Small River & Stream Discovery
+* **OpenStreetMap Overpass Integration:** Scans a 400-meter radius around the pin for all waterway classifications: `stream`, `canal`, `river`, `drain`, `ditch`, `brook`, `reservoir`, `basin`, and `wetland`.
+* **Identifies Real Waterway Names:** Automatically displays the true regional name (e.g. *La Garonne*, *Canal du Midi*, *Le Touch*).
+
+### 2. Hydrological Discharge Grid (Open-Meteo Hydro)
+* Queries real-time catchment discharge ($> 0\ \text{m}^3/\text{s}$) to confirm active flowing water even if satellite imagery is partially obscured.
+
+### 3. One-Click Manual Scan Override ("Scan as River / Waterway Spot")
+* If a citizen or researcher zooms in on an obscure unmapped farm ditch, private pond, or seasonal stream not cataloged in OpenStreetMap:
+  * Both the **map popup** and the **Target Analysis panel** provide a one-click button: **`🌊 Scan as River / Waterway Spot`**.
+  * Clicking it immediately unlocks full satellite water toxicity telemetry and syncs the readings to the main dashboard.
+
+### 4. Satellite Optical Physics (NDWI)
 AquaLens uses the physics of light through the **Normalized Difference Water Index (NDWI)**:
 * **Water absorbs Near-Infrared (NIR) light** like a sponge, but reflects Green light.
 * **Dry soil, concrete, asphalt, and vegetation strongly reflect Near-Infrared light.**
@@ -187,9 +226,12 @@ AquaLens connects space surveillance directly to hospital EHR systems:
   * Pure White (`#FFFFFF`)
   * Electric Yellow (`#FFE500`)
   * *Zero generic pulsing dots; custom precision GIS reticles.*
-* **Data APIs:**
-  * European Space Agency (ESA) Copernicus STAC API
-  * Open-Meteo Hydrology Discharge API (Manning-Strickler hydrodynamic modeling)
+* **Data APIs & Microservices:**
+  * **ESA Copernicus STAC API:** Live satellite telemetry (`/api/satellite`) returning real orbit, cloud cover, and Sentinel-2 granule passes
+  * **OpenStreetMap Overpass API:** Live geospatial surface inspection (`/api/detect-water`) detecting small rivers, streams, canals, and waterways
+  * **Open-Meteo Hydrology API:** Live river discharge and flow velocity estimates
+  * **HL7 FHIR R4 Microservice:** Clinical emergency bundle generator (`/api/fhir`)
+  * **ESRI World Imagery:** High-resolution optical space basemap via GIS tile services
 
 ---
 
