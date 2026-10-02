@@ -6,7 +6,6 @@ import { PilotBasin, SpectralMode, DownstreamPOI } from '@/lib/types';
 import { Navbar } from '@/components/Navbar';
 import { SatelliteMap } from '@/components/SatelliteMap';
 import { SpectralViewer } from '@/components/SpectralViewer';
-import { TimeMachineSlider } from '@/components/TimeMachineSlider';
 import { OneHealthAlerts } from '@/components/OneHealthAlerts';
 import { FhirInspector } from '@/components/FhirInspector';
 import { RegulatoryDossier } from '@/components/RegulatoryDossier';
@@ -488,12 +487,7 @@ export default function SentinelPlatform() {
           />
         </section>
 
-        {/* =========================================================================
-            SECTION 4: RIVER TIME MACHINE SLIDER
-            ========================================================================= */}
-        <section>
-          <TimeMachineSlider basin={currentBasin} />
-        </section>
+
 
         {/* =========================================================================
             SECTION 5: DOWNSTREAM PRECAUTIONARY ALERTS & HOSPITAL ADVISORIES
