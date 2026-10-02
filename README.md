@@ -67,20 +67,43 @@ AquaLens runs 4 primary automated tests using satellite optical sensors:
 
 ### Why Local Municipal Reports Often Fail
 When citizens report dirty river water to local city offices, reports are often ignored or dismissed as "just regular river water." Local municipalities frequently lack the budget or political will to acknowledge environmental contamination.
+### 🤖 vs 👤 Does the Satellite Report, or Does the Human Report?
 
-### The AquaLens Solution: International WHO Benchmarks
-Instead of relying on arbitrary local opinions, AquaLens evaluates water safety against binding **World Health Organization (WHO)** international guidelines:
+**Both work together in a "Human-in-the-Loop" One Health partnership:**
 
-1. **Requirement X vs. Found Amount:**
-   * **Dissolved Oxygen:** WHO Minimum Requirement (X): $\ge 5.0\ \text{mg/L}$ $\rightarrow$ *Found: $3.2\ \text{mg/L}$* $\rightarrow$ **Critical Hypoxia Violation**.
-   * **Poison Algae (Microcystin):** WHO Guideline Limit (X): $\le 10.0\ \mu\text{g/L}$ $\rightarrow$ *Found: $78.4\ \mu\text{g/L}$* $\rightarrow$ **Violates WHO Alert Level 2**.
-   * **Turbidity (Cloudiness):** WHO Safe Intake Limit (X): $\le 5.0\ \text{NTU}$ $\rightarrow$ *Found: $44.2\ \text{NTU}$* $\rightarrow$ **Severe Contamination Violation**.
-2. **Public Registry Check:**
-   * If a toxic plume is detected but has not been logged on official public health registries, AquaLens flags it as an **⚠️ UNREPORTED TOXIC SPIKE**.
-3. **1-Click WHO Alert Generation:**
-   * Clicking **"Report to WHO"** generates an official WHO surveillance dispatch ID (e.g., `#WHO-WASH-2026-928174`).
-   * Provides direct access to the [Official WHO Water, Sanitation and Health (WASH) Division](https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health).
-   * Copies verified satellite evidence and GPS coordinates to the clipboard for immediate escalation to international inspectors.
+1. **The Satellite & AI (Autonomous Machine):**
+   * Operates 24/7 scanning Earth from 786 km above.
+   * Autonomously detects chemical and algae plumes, calculates biophysical indices (NDWI, NDCI, Nechad Turbidity), matches findings against WHO international limits, and flags **"UNREPORTED TOXIC SPIKES"**.
+   * It eliminates the need for citizens to do expensive laboratory testing or understand complex chemistry.
+
+2. **The Human Citizen or Health Official (The Complainant / Whistleblower):**
+   * In legal governance, official complaints require a human with legal standing to authorize submission.
+   * The human reviews the satellite evidence, adds on-the-ground observations (e.g. foul smell, foam, dead fish, or swimmers nearby), and clicks **"Report to WHO"**.
+   * The human receives an official WHO dispatch tracking ID (`#WHO-WASH-2026-XXXXXX`) to hold local polluters and municipal authorities accountable.
+
+---
+
+### 📋 Step-by-Step Guide: How to Upload & File a Complaint
+
+Here is the exact step-by-step procedure for a user to upload a pollution complaint:
+
+1. **Step 1: Select Your River or Enter GPS Coordinates**
+   * Click any of the **6 River Buttons** (Toulouse, Coimbra, Ghent, Benevento, Maribor, Ganges) or enter your city's latitude/longitude and click **"Lock GPS"**.
+2. **Step 2: Open the WHO Surveillance Portal**
+   * Click the **"WHO Report & Benchmarks"** button in the top action bar.
+3. **Step 3: Review the Automated Evidence (Requirement X vs. Found Amount)**
+   * Check the benchmark table:
+     * *Dissolved Oxygen:* Is it below $5.0\ \text{mg/L}$ (Hypoxia)?
+     * *Poison Algae:* Is it above $10.0\ \mu\text{g/L}$ (WHO Alert Level 2)?
+     * *Turbidity:* Is it above $5.0\ \text{NTU}$ (Excessive mud/sewage)?
+4. **Step 4: Add Ground Observations (Optional)**
+   * In the **"Citizen Observations"** text box, type any local details: e.g., *"Strong chemical odor, greenish scum along the bank, children swimming nearby unaware."*
+5. **Step 5: Dispatch the Complaint**
+   * Click **"Report to WHO"**: Generates your official global surveillance dispatch ID (e.g., `#WHO-WASH-2026-928174`) and registers the breach.
+   * *Alternatively*, click **"Copy Evidence"** to copy the formatted forensic payload into your clipboard and paste it directly into your local police, municipal environmental agency, or news tip portal.
+6. **Step 6: Follow-Up & Public Escalation**
+   * Keep your dispatch ID reference.
+   * Use the **"Open WHO Global Water Portal"** button to view active international sanitation advisories.
 
 ---
 

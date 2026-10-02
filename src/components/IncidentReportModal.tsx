@@ -104,8 +104,44 @@ Verification Protocol: Copernicus Sentinel-2 Multispectral Instrument (MSI)`;
         </div>
 
         {/* Human-Friendly Explainer Banner in Simple Words */}
-        <div className="px-5 sm:px-6 py-3 bg-surface-subtle border-b border-editorial-hairline text-xs text-editorial-charcoal leading-relaxed">
-          <strong className="text-black">Why report to the WHO instead of local offices?</strong> Most rivers are already known locally to be non-potable (unsafe to drink raw). Reporting to municipal town halls often gets lost in paperwork because "everyone already knows it's a river." Instead, AquaLens checks international <strong>World Health Organization (WHO)</strong> standards that apply to every country. If this river's water level, oxygen, or poison content violates WHO requirements and is currently <strong>unreported on international health databases</strong>, this portal alerts the WHO Global Water & Health Network directly.
+        <div className="px-5 sm:px-6 py-3.5 bg-surface-subtle border-b border-editorial-hairline text-xs text-editorial-charcoal leading-relaxed space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="font-bold text-black flex items-center gap-1.5 font-sans">
+              <span className="w-2 h-2 rounded-full bg-[#FFE500]" />
+              HOW COMPLAINT REPORTING WORKS: SATELLITE AI + HUMAN CITIZEN
+            </span>
+            <span className="font-mono text-[10px] text-editorial-muted">
+              Standard: WHO WASH Protocol 2026
+            </span>
+          </div>
+          <p>
+            <strong>Does the satellite report, or does the human report?</strong> <strong className="text-black">Both work together:</strong> The European Space Agency satellite automatically monitors the river from space and builds this scientific evidence package. <strong>You (the human citizen or health official)</strong> then verify and officially upload/dispatch the complaint to hold polluters accountable under international law.
+          </p>
+
+          {/* 3-Step Action Guide */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 font-sans">
+            <div className="p-2 rounded-xl bg-white border border-editorial-hairline flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-black text-[#FFE500] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+              <div>
+                <strong className="text-black block text-[11px]">Review Satellite Data</strong>
+                <span className="text-[10px] text-editorial-muted leading-tight block">Check the WHO benchmark table below showing where limits were breached.</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-xl bg-white border border-editorial-hairline flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-black text-[#FFE500] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+              <div>
+                <strong className="text-black block text-[11px]">Add Field Notes (Optional)</strong>
+                <span className="text-[10px] text-editorial-muted leading-tight block">Describe any visible scum, bad odors, dead fish, or swimmers nearby.</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-xl bg-white border border-editorial-hairline flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#FFE500] text-black font-mono text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+              <div>
+                <strong className="text-black block text-[11px]">Dispatch & Upload</strong>
+                <span className="text-[10px] text-editorial-muted leading-tight block">Click "Report to WHO" to generate your official global tracking dispatch ID.</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Content Body */}
@@ -338,6 +374,27 @@ Verification Protocol: Copernicus Sentinel-2 Multispectral Instrument (MSI)`;
                   <span className="font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded text-[10px] uppercase">
                     Queued for International Public Health Advisory
                   </span>
+                </div>
+              </div>
+
+              {/* Next Steps for User */}
+              <div className="max-w-lg mx-auto p-3.5 rounded-2xl bg-surface-subtle border border-editorial-hairline text-left text-xs font-sans space-y-2">
+                <span className="font-bold text-black uppercase text-[11px] block">
+                  Next Steps: How Your Complaint is Used
+                </span>
+                <div className="space-y-1.5 text-[11px] text-editorial-charcoal">
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-black text-[#FFE500] font-mono text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">A</span>
+                    <span><strong>Keep Your Dispatch ID:</strong> Use reference <code>{dispatchId}</code> when contacting regional health ministries or environmental inspectors.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-black text-[#FFE500] font-mono text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">B</span>
+                    <span><strong>Direct WHO WASH Escalation:</strong> Click the yellow button below to open the official WHO sanitation division and attach your dispatch record.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-[#FFE500] text-black font-mono text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">C</span>
+                    <span><strong>Inform Local Communities:</strong> Share the advisory with local schools, swimming clubs, and water utilities to prevent toxic exposure.</span>
+                  </div>
                 </div>
               </div>
 
