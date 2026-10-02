@@ -107,8 +107,6 @@ export async function GET(request: Request) {
   }
 
   // Calculate dynamic optical indices based on target coordinates and basin
-  const isCustomCoord = queryLat !== null && queryLng !== null && (Math.abs(queryLat - basin.center[0]) > 0.05 || Math.abs(queryLng - basin.center[1]) > 0.05);
-
   let liveChlorophyll = basin.plume.chlorophyllConcentrationMgM3;
   let liveTurbidity = basin.spectralStats.turbidityNtu;
   let liveTemp = basin.spectralStats.surfaceTempC;
@@ -116,18 +114,31 @@ export async function GET(request: Request) {
   let liveWqiVal = basin.plume.wqiEquivalent;
   let liveNdwi = basin.spectralStats.ndwiMean;
 
-  if (isCustomCoord && queryLat !== null && queryLng !== null) {
-    // Generate deterministic biophysical values for custom coordinates
-    const seed = Math.abs(Math.sin(queryLat * 12.9898 + queryLng * 78.233)) * 43758.5453;
-    const norm = seed - Math.floor(seed); // 0.0 to 1.0
+  if (queryLat !== null && queryLng !== null) {
+    const dLat = (queryLat - basin.plume.lat) * 111;
+    const dLng = (queryLng - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180);
+    const distFromPlumeKm = Math.sqrt(dLat * dLat + dLng * dLng);
 
-    liveChlorophyll = Number((15.0 + norm * 75.0).toFixed(1));
-    liveTurbidity = Number((10.0 + (1 - norm) * 80.0).toFixed(1));
-    liveTemp = Number((18.0 + norm * 8.0).toFixed(1));
-    liveDO = Number((3.0 + (1 - norm) * 5.5).toFixed(1));
-    const computed = computeSatelliteWQI(liveChlorophyll, liveTurbidity, liveTemp);
-    liveWqiVal = computed.wqi;
-    liveNdwi = Number((0.25 + norm * 0.35).toFixed(2));
+    // If within regional basin reach (< 120km)
+    if (distFromPlumeKm < 120) {
+      liveWqiVal = Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlumeKm * 3.5, 38)));
+      liveChlorophyll = Math.max(9.0, Number((basin.plume.chlorophyllConcentrationMgM3 - Math.min(distFromPlumeKm * 5.5, basin.plume.chlorophyllConcentrationMgM3 - 10)).toFixed(1)));
+      liveDO = Math.min(8.2, Number((basin.spectralStats.dissolvedOxygenMgL + Math.min(distFromPlumeKm * 0.35, 3.8)).toFixed(1)));
+      liveTurbidity = Math.max(4.5, Number((basin.spectralStats.turbidityNtu - Math.min(distFromPlumeKm * 2.8, basin.spectralStats.turbidityNtu - 6)).toFixed(1)));
+      liveNdwi = Number((basin.spectralStats.ndwiMean + Math.sin(queryLat * 10 + queryLng * 10) * 0.05).toFixed(2));
+    } else {
+      // Global custom coordinate outside known pilot basins
+      const seed = Math.abs(Math.sin(queryLat * 12.9898 + queryLng * 78.233)) * 43758.5453;
+      const norm = seed - Math.floor(seed);
+
+      liveChlorophyll = Number((15.0 + norm * 75.0).toFixed(1));
+      liveTurbidity = Number((10.0 + (1 - norm) * 80.0).toFixed(1));
+      liveTemp = Number((18.0 + norm * 8.0).toFixed(1));
+      liveDO = Number((3.0 + (1 - norm) * 5.5).toFixed(1));
+      const computed = computeSatelliteWQI(liveChlorophyll, liveTurbidity, liveTemp);
+      liveWqiVal = computed.wqi;
+      liveNdwi = Number((0.25 + norm * 0.35).toFixed(2));
+    }
   }
 
   const computedStatus = computeSatelliteWQI(liveChlorophyll, liveTurbidity, liveTemp);

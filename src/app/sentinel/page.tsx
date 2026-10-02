@@ -25,6 +25,18 @@ export default function SentinelPlatform() {
   const [spectralMode, setSpectralMode] = useState<SpectralMode>('chlorophyll');
   const [selectedPOI, setSelectedPOI] = useState<DownstreamPOI | null>(null);
 
+  // Selected Map Clicked Point State
+  const [selectedMapPoint, setSelectedMapPoint] = useState<{
+    lat: number;
+    lng: number;
+    wqi: number;
+    chlorophyll: number;
+    dissolvedOxygen: number;
+    turbidity: number;
+    flowSpeed: number;
+    distKm: number;
+  } | null>(null);
+
   // Live Satellite STAC & Hydrology API State
   const [isQueryingApi, setIsQueryingApi] = useState<boolean>(false);
   const [apiTelemetry, setApiTelemetry] = useState<any>(null);
@@ -56,7 +68,7 @@ export default function SentinelPlatform() {
       if (res.ok) {
         const data = await res.json();
         setApiTelemetry(data);
-        showToast(`ESA Satellite Telemetry Synced (${data.satelliteObservation.mgrsTile || '31TCJ'})`);
+        showToast(`ESA Satellite Telemetry Synced (${data.satelliteObservation?.mgrsTile || '31TCJ'})`);
       }
     } catch (err) {
       console.error('Satellite API fetch error:', err);
@@ -83,22 +95,46 @@ export default function SentinelPlatform() {
     }
   };
 
+  // Handler for direct map clicks from SatelliteMap component
+  const handleMapCoordinateSelect = (
+    lat: number,
+    lng: number,
+    localMetrics: {
+      wqi: number;
+      chlorophyll: number;
+      dissolvedOxygen: number;
+      turbidity: number;
+      flowSpeed: number;
+      distKm: number;
+    }
+  ) => {
+    setSelectedMapPoint({
+      lat,
+      lng,
+      ...localMetrics,
+    });
+    setCustomLat(lat.toFixed(5));
+    setCustomLng(lng.toFixed(5));
+    querySatelliteApi(lat, lng, currentBasin.id);
+    showToast(`📍 Map Point Inspected: ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E — Dashboard Synced!`);
+  };
+
   const isCustomScanActive = customLat !== currentBasin.center[0].toString() || customLng !== currentBasin.center[1].toString();
-  const displayWqi = (isCustomScanActive && apiTelemetry?.opticalIndices?.wqi !== undefined)
+  const displayWqi = selectedMapPoint?.wqi ?? ((isCustomScanActive && apiTelemetry?.opticalIndices?.wqi !== undefined)
     ? apiTelemetry.opticalIndices.wqi
-    : currentBasin.plume.wqiEquivalent;
-  const displayChlorophyll = (isCustomScanActive && apiTelemetry?.opticalIndices?.chlorophyllUgL !== undefined)
+    : currentBasin.plume.wqiEquivalent);
+  const displayChlorophyll = selectedMapPoint?.chlorophyll ?? ((isCustomScanActive && apiTelemetry?.opticalIndices?.chlorophyllUgL !== undefined)
     ? apiTelemetry.opticalIndices.chlorophyllUgL
-    : currentBasin.plume.chlorophyllConcentrationMgM3;
-  const displayDO = (isCustomScanActive && apiTelemetry?.opticalIndices?.dissolvedOxygenMgL !== undefined)
+    : currentBasin.plume.chlorophyllConcentrationMgM3);
+  const displayDO = selectedMapPoint?.dissolvedOxygen ?? ((isCustomScanActive && apiTelemetry?.opticalIndices?.dissolvedOxygenMgL !== undefined)
     ? apiTelemetry.opticalIndices.dissolvedOxygenMgL
-    : currentBasin.spectralStats.dissolvedOxygenMgL;
-  const displayTurbidity = (isCustomScanActive && apiTelemetry?.opticalIndices?.turbidityNtu !== undefined)
+    : currentBasin.spectralStats.dissolvedOxygenMgL);
+  const displayTurbidity = selectedMapPoint?.turbidity ?? ((isCustomScanActive && apiTelemetry?.opticalIndices?.turbidityNtu !== undefined)
     ? apiTelemetry.opticalIndices.turbidityNtu
-    : currentBasin.spectralStats.turbidityNtu;
-  const displayFlowSpeed = (isCustomScanActive && apiTelemetry?.hydrologyTelemetry?.flowVelocityKmH !== undefined)
+    : currentBasin.spectralStats.turbidityNtu);
+  const displayFlowSpeed = selectedMapPoint?.flowSpeed ?? ((isCustomScanActive && apiTelemetry?.hydrologyTelemetry?.flowVelocityKmH !== undefined)
     ? apiTelemetry.hydrologyTelemetry.flowVelocityKmH
-    : currentBasin.plume.flowVelocityKmH;
+    : currentBasin.plume.flowVelocityKmH);
 
   return (
     <div className="flex-1 flex flex-col bg-white text-black min-h-screen">
@@ -146,6 +182,7 @@ export default function SentinelPlatform() {
                     key={b.id}
                     onClick={() => {
                       setCurrentBasin(b);
+                      setSelectedMapPoint(null);
                       setSelectedPOI(null);
                       setCustomLat(b.center[0].toString());
                       setCustomLng(b.center[1].toString());
@@ -169,15 +206,38 @@ export default function SentinelPlatform() {
               WATER TEST & TOXICITY RESULTS FOR THIS CHOSEN LOCATION (IN SIMPLE WORDS)
               ========================================================================= */}
           <div className="rounded-2xl bg-black text-white p-5 sm:p-6 shadow-elevation space-y-4 border border-white/10">
+            {/* Clicked Map Location Active Alert Banner */}
+            {selectedMapPoint && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#FFE500] text-black font-mono text-xs shadow-sm">
+                <span className="font-bold flex items-center gap-2">
+                  <PrecisionReticle className="w-4 h-4 text-black shrink-0" />
+                  <span>📍 SHOWING CLICKED MAP LOCATION: {selectedMapPoint.lat}°N, {selectedMapPoint.lng}°E ({selectedMapPoint.distKm.toFixed(2)} km from plume) — SATELLITE TELEMETRY ACTIVE</span>
+                </span>
+                <button
+                  onClick={() => {
+                    setSelectedMapPoint(null);
+                    setCustomLat(currentBasin.center[0].toString());
+                    setCustomLng(currentBasin.center[1].toString());
+                    querySatelliteApi(currentBasin.center[0], currentBasin.center[1], currentBasin.id);
+                    showToast('Returned to main river basin view.');
+                  }}
+                  className="px-3 py-1 rounded-lg bg-black text-[#FFE500] font-bold text-[10px] uppercase hover:bg-neutral-800 transition-colors shrink-0 self-start sm:self-auto"
+                >
+                  Reset to Basin Center ✕
+                </button>
+              </div>
+            )}
+
             {/* Headline Banner */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/15 pb-4">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2.5 py-0.5 rounded bg-[#FFE500] text-black font-mono font-bold text-[11px] uppercase tracking-wider">
-                    {currentBasin.flag} CURRENT TEST RESULTS
+                    {currentBasin.flag} {selectedMapPoint ? 'MAP POINT INSPECTION' : 'CURRENT TEST RESULTS'}
                   </span>
                   <span className="text-xs font-mono text-[#AAAAAA] uppercase">
                     Location: {currentBasin.riverName} ({currentBasin.country})
+                    {selectedMapPoint && ` · [${selectedMapPoint.lat}°N, ${selectedMapPoint.lng}°E]`}
                   </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black uppercase text-white font-sans mt-1">
@@ -410,6 +470,7 @@ export default function SentinelPlatform() {
             basin={currentBasin}
             spectralMode={spectralMode}
             onSelectPOI={(poi) => setSelectedPOI(poi)}
+            onCoordinateSelect={handleMapCoordinateSelect}
           />
         </section>
 
