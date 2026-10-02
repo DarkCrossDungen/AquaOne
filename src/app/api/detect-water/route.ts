@@ -1,11 +1,63 @@
 import { NextResponse } from 'next/server';
-import { PILOT_BASINS } from '@/lib/pilotBasins';
+import sharp from 'sharp';
+
+function latLngToTilePixel(lat: number, lng: number, zoom = 16) {
+  const n = Math.pow(2, zoom);
+  const xExact = ((lng + 180) / 360) * n;
+  const rad = (lat * Math.PI) / 180;
+  const yExact = ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n;
+
+  const tileX = Math.floor(xExact);
+  const tileY = Math.floor(yExact);
+  const pixelX = Math.floor((xExact - tileX) * 256);
+  const pixelY = Math.floor((yExact - tileY) * 256);
+
+  return { tileX, tileY, pixelX, pixelY };
+}
+
+async function inspectSatellitePixel(lat: number, lng: number) {
+  try {
+    const { tileX, tileY, pixelX, pixelY } = latLngToTilePixel(lat, lng, 16);
+    const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/${tileY}/${tileX}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const { data, info } = await sharp(buffer).raw().toBuffer({ resolveWithObject: true });
+
+    let rSum = 0, gSum = 0, bSum = 0, count = 0;
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const px = Math.max(0, Math.min(255, pixelX + dx));
+        const py = Math.max(0, Math.min(255, pixelY + dy));
+        const idx = (py * info.width + px) * info.channels;
+        rSum += data[idx];
+        gSum += data[idx + 1];
+        bSum += data[idx + 2];
+        count++;
+      }
+    }
+
+    const r = rSum / count;
+    const g = gSum / count;
+    const b = bSum / count;
+    const brightness = (r + g + b) / 3;
+    const grwi = (g - r) / (g + r + 0.001);
+
+    return { r, g, b, brightness, grwi };
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const latStr = searchParams.get('lat');
   const lngStr = searchParams.get('lng');
-  const basinId = searchParams.get('basinId');
 
   if (!latStr || !lngStr) {
     return NextResponse.json({ isWater: false, waterBodyName: null, waterType: null, source: 'error' });
@@ -19,27 +71,40 @@ export async function GET(request: Request) {
   }
 
   // =========================================================================
-  // METHOD 1: OpenStreetMap Overpass API (High-precision waterway/river/stream search)
-  // Searching around 400m to catch small rivers, streams, canals, and riverbanks
+  // STEP 1: Satellite Optical Pixel Inspection (ESRI World Imagery Ground Truth)
+  // Samples the true optical reflectance of the exact coordinate.
+  // =========================================================================
+  const opt = await inspectSatellitePixel(lat, lng);
+
+  // If the optical sample shows dry terrain (high brightness, soil/rock red, negative water index)
+  // it is DEFINITIVELY LAND — rocks, trees, roads, fields, or buildings.
+  if (opt) {
+    const isObviousLand = (opt.grwi < -0.03 && opt.brightness > 115) || opt.brightness > 165;
+    if (isObviousLand) {
+      return NextResponse.json({
+        isWater: false,
+        waterBodyName: null,
+        waterType: null,
+        opticalReflectance: opt,
+        source: 'satellite_optical_spectral_ground_truth',
+      });
+    }
+  }
+
+  // =========================================================================
+  // STEP 2: OpenStreetMap Overpass Micro-Search (Tight 60m radius)
+  // Only triggers if immediately on or within 60m of a cataloged waterway.
   // =========================================================================
   try {
-    const query = `[out:json][timeout:6];(
-      way["waterway"](around:400,${lat},${lng});
-      way["natural"="water"](around:400,${lat},${lng});
-      way["water"](around:400,${lat},${lng});
-      way["natural"="coastline"](around:600,${lat},${lng});
-      way["natural"="bay"](around:600,${lat},${lng});
-      way["natural"="wetland"](around:400,${lat},${lng});
-      way["landuse"="reservoir"](around:400,${lat},${lng});
-      way["landuse"="basin"](around:400,${lat},${lng});
-      relation["waterway"](around:400,${lat},${lng});
-      relation["natural"="water"](around:400,${lat},${lng});
-      relation["place"="sea"](around:800,${lat},${lng});
-      relation["place"="ocean"](around:800,${lat},${lng});
-    );out tags 4;`;
+    const query = `[out:json][timeout:3];(
+      way["waterway"](around:60,${lat},${lng});
+      way["natural"="water"](around:60,${lat},${lng});
+      relation["waterway"](around:60,${lat},${lng});
+      relation["natural"="water"](around:60,${lat},${lng});
+    );out tags 2;`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4500);
+    const timeout = setTimeout(() => controller.abort(), 2500);
 
     const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, {
       method: 'GET',
@@ -56,108 +121,43 @@ export async function GET(request: Request) {
       const data = await res.json();
       const elements = data.elements || [];
       if (elements.length > 0) {
-        // Find best name from tags
         let chosenName = null;
         let chosenType = 'river';
 
         for (const el of elements) {
           const tags = el.tags || {};
-          const n = tags.name || tags['name:en'] || tags['name:fr'] || tags['name:es'] || tags['name:oc'];
+          const n = tags.name || tags['name:en'] || tags['name:fr'] || tags['name:es'];
           if (n && !chosenName) {
             chosenName = n;
           }
           if (tags.waterway) chosenType = tags.waterway;
           else if (tags.natural) chosenType = tags.natural;
-          else if (tags.water) chosenType = tags.water;
         }
 
         return NextResponse.json({
           isWater: true,
-          waterBodyName: chosenName || `River / ${chosenType}`,
+          waterBodyName: chosenName || `River Channel (${chosenType})`,
           waterType: chosenType,
-          source: 'OpenStreetMap Overpass API',
+          source: 'OpenStreetMap Overpass',
         });
       }
     }
   } catch (err) {
-    console.warn('Overpass API check note:', err instanceof Error ? err.message : 'timeout');
+    console.warn('Overpass micro-search note:', err instanceof Error ? err.message : 'timeout');
   }
 
   // =========================================================================
-  // METHOD 2: Open-Meteo Global River Discharge & Hydrology Catchment
-  // Checks if this location has an active river discharge (> 0 m³/s)
-  // =========================================================================
-  try {
-    const hydroController = new AbortController();
-    const hydroTimeout = setTimeout(() => hydroController.abort(), 2500);
-
-    const hydroUrl = `https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&daily=river_discharge&forecast_days=1`;
-    const hydroRes = await fetch(hydroUrl, { signal: hydroController.signal });
-    clearTimeout(hydroTimeout);
-
-    if (hydroRes.ok) {
-      const hydroJson = await hydroRes.json();
-      const discharge = hydroJson.daily?.river_discharge?.[0];
-
-      // If positive discharge exists and matches catchment
-      if (typeof discharge === 'number' && discharge > 0.05) {
-        // Check if there is an active river in current basin
-        const basin = PILOT_BASINS.find((b) => b.id === basinId) || PILOT_BASINS[0];
-        const distKm = Math.sqrt(
-          Math.pow((lat - basin.center[0]) * 111, 2) +
-          Math.pow((lng - basin.center[1]) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
-        );
-
-        if (distKm <= 35) {
-          return NextResponse.json({
-            isWater: true,
-            waterBodyName: `${basin.riverName} Tributary / Corridor`,
-            waterType: 'river_tributary',
-            source: 'Open-Meteo Hydrology Network',
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Open-Meteo fallback note:', err instanceof Error ? err.message : 'timeout');
-  }
-
-  // =========================================================================
-  // METHOD 3: Check Regional Proximity to Basin Pilot Waterways
-  // If the user is inspecting within 5km of the active river corridor
-  // =========================================================================
-  for (const b of PILOT_BASINS) {
-    const dCenter = Math.sqrt(
-      Math.pow((lat - b.center[0]) * 111, 2) +
-      Math.pow((lng - b.center[1]) * 111 * Math.cos((b.center[0] * Math.PI) / 180), 2)
-    );
-    const dPlume = Math.sqrt(
-      Math.pow((lat - b.plume.lat) * 111, 2) +
-      Math.pow((lng - b.plume.lng) * 111 * Math.cos((b.center[0] * Math.PI) / 180), 2)
-    );
-
-    // If within 4.5km of river center or plume origin
-    if (dCenter <= 4.5 || dPlume <= 4.5) {
-      return NextResponse.json({
-        isWater: true,
-        waterBodyName: b.riverName,
-        waterType: 'river_basin',
-        source: 'Regional River Basin Registry',
-      });
-    }
-  }
-
-  // =========================================================================
-  // METHOD 4: Nominatim Reverse Geocoding (Detects oceans, bays, beaches)
+  // STEP 3: Ocean / Coastal Geocode Check
+  // Off-shore oceanic coordinates return 'Unable to geocode' in Nominatim.
   // =========================================================================
   try {
     const nomController = new AbortController();
-    const nomTimeout = setTimeout(() => nomController.abort(), 2500);
+    const nomTimeout = setTimeout(() => nomController.abort(), 2000);
 
     const nomUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`;
     const nomRes = await fetch(nomUrl, {
       signal: nomController.signal,
-      headers: { 'User-Agent': 'AquaLens-Sentinel/1.0 (IEEE-Hackathon; contact@aqualens.org)' }
+      headers: { 'User-Agent': 'AquaLens-Sentinel/1.0 (water-detect; contact@aqualens.org)' }
     });
     clearTimeout(nomTimeout);
 
@@ -166,39 +166,22 @@ export async function GET(request: Request) {
       if (data.error === 'Unable to geocode') {
         return NextResponse.json({
           isWater: true,
-          waterBodyName: 'Open Ocean / Sea',
+          waterBodyName: 'Open Ocean / Coastal Sea',
           waterType: 'ocean',
           source: 'Ocean Geo-Inference',
         });
       }
 
-      const category = (data.category || '').toLowerCase();
+      const category = (data.category || data.class || '').toLowerCase();
       const type = (data.type || '').toLowerCase();
-      const displayName = (data.display_name || '').toLowerCase();
 
-      const waterTypes = [
-        'water', 'river', 'lake', 'stream', 'canal', 'reservoir', 'pond',
-        'sea', 'ocean', 'wetland', 'riverbank', 'drain', 'ditch', 'dock',
-        'basin', 'bay', 'strait', 'coastline', 'beach', 'harbour', 'marina',
-      ];
-
-      const waterKeywords = [
-        'river', 'lake', 'ocean', 'sea', 'canal', 'bay', 'strait',
-        'creek', 'stream', 'harbour', 'harbor', 'port', 'marina',
-        'lagoon', 'estuary', 'delta', 'reservoir', 'pond', 'waterway',
-        'atlantic', 'pacific', 'indian', 'mediterranean', 'gulf',
-      ];
-
-      if (
-        waterTypes.includes(type) ||
-        waterTypes.includes(category) ||
-        waterKeywords.some(kw => displayName.includes(kw))
-      ) {
+      // If Nominatim explicitly identifies a waterway polygon
+      if (['waterway', 'natural'].includes(category) && ['water', 'river', 'lake', 'stream', 'canal', 'bay', 'ocean', 'sea'].includes(type)) {
         return NextResponse.json({
           isWater: true,
           waterBodyName: data.name || data.display_name?.split(',')[0] || 'Waterway',
-          waterType: type || category || 'water',
-          source: 'Nominatim Geo-Registry',
+          waterType: type,
+          source: 'Nominatim Waterway Registry',
         });
       }
     }
@@ -206,7 +189,23 @@ export async function GET(request: Request) {
     console.warn('Nominatim note:', err instanceof Error ? err.message : 'timeout');
   }
 
-  // Not detected on water
+  // =========================================================================
+  // STEP 4: Optical Water Signature Confirmation
+  // If the optical satellite reflectance shows water characteristics (low brightness, positive green/red)
+  // =========================================================================
+  if (opt && opt.grwi > 0.08 && opt.brightness < 105) {
+    return NextResponse.json({
+      isWater: true,
+      waterBodyName: 'Water Surface Channel',
+      waterType: 'water_body',
+      opticalReflectance: opt,
+      source: 'satellite_optical_spectral_detection',
+    });
+  }
+
+  // =========================================================================
+  // DEFAULT: No water detected -> Land
+  // =========================================================================
   return NextResponse.json({
     isWater: false,
     waterBodyName: null,

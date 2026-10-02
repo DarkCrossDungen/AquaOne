@@ -130,19 +130,22 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
         </div>
 
         <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #08080A;">
-          No Major Waterway Auto-Detected
+          No Water Body Present
         </div>
 
-        <div style="font-size: 11px; color: #555; margin-bottom: 10px; line-height: 1.4;">
-          This exact spot appears to be dry ground or a riverbank. If you clicked on a small river, stream, canal, or ditch:
+        <div style="font-size: 11px; color: #555; margin-bottom: 8px; line-height: 1.4;">
+          This coordinate is dry terrain (soil, forest, road, or structure). Water toxicity sensors only activate on water surfaces (rivers, lakes, canals, coastal waters).
         </div>
 
-        <button onclick="window.aqualensForceWaterScan()" style="width: 100%; padding: 8px 12px; background: #FFE500; color: #08080A; border: none; border-radius: 8px; font-weight: 800; font-size: 11px; font-family: inherit; cursor: pointer; text-transform: uppercase; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 6px;">
-          <span>🌊 Scan as River / Waterway Spot</span>
-        </button>
+        <div style="background: #F7F7F8; padding: 8px; border-radius: 8px; border: 1px solid rgba(8,8,10,0.08); font-family: monospace; font-size: 10px; color: #777; margin-bottom: 10px;">
+          <div style="margin-bottom: 2px;">• Surface Type: <strong style="color: #08080A;">Dry Ground / Land</strong></div>
+          <div style="margin-bottom: 2px;">• Water Score: <strong style="color: #6B6B76;">N/A (No Water Body)</strong></div>
+          <div style="margin-bottom: 2px;">• Algae & Toxins: <strong style="color: #6B6B76;">N/A (Zero Aquatic Mass)</strong></div>
+          <div>• Dissolved Oxygen: <strong style="color: #6B6B76;">N/A</strong></div>
+        </div>
 
-        <div style="font-size: 9px; font-family: monospace; color: #6B6B76; border-top: 1px solid rgba(8,8,10,0.08); padding-top: 6px; margin-top: 8px;">
-          🗺️ Surface telemetry via OpenStreetMap & Open-Meteo Hydro
+        <div style="font-size: 9px; font-family: monospace; color: #6B6B76; border-top: 1px solid rgba(8,8,10,0.08); padding-top: 6px;">
+          🗺️ Satellite Surface Telemetry · Optical Ground Truth
         </div>
       </div>
     `;
@@ -271,13 +274,9 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
             bodyName = data.waterBodyName || null;
           }
         } catch {
-          // If query times out, check proximity to basin center/corridor
-          const dCenter = Math.sqrt(
-            Math.pow((latFixed - basin.center[0]) * 111, 2) +
-            Math.pow((lngFixed - basin.center[1]) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
-          );
-          isWater = dCenter <= 6.0;
-          bodyName = isWater ? basin.riverName : null;
+          // If query fails or times out, default conservatively to land
+          isWater = false;
+          bodyName = null;
         }
 
         if (!isMounted) return;
@@ -290,6 +289,7 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
           onCoordinateSelect?.(latFixed, lngFixed, metrics);
           userPinMarker.setPopupContent(buildWaterPopup(latFixed, lngFixed, bodyName));
         } else {
+          // LAND: Do NOT call onCoordinateSelect. Show clear Land popup with N/A scores.
           userPinMarker.setPopupContent(buildLandPopup(latFixed, lngFixed));
         }
       });
@@ -539,19 +539,13 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
                 <div>Toxin Level: <strong className="text-editorial-muted">N/A (Dry Ground)</strong></div>
               </div>
 
-              <div className="p-2 rounded-lg bg-surface-subtle border border-editorial-hairline text-[10px] text-editorial-charcoal mb-2">
-                <div className="font-bold text-black mb-0.5">Clicked on a river, canal, or stream?</div>
-                <div className="text-editorial-muted mb-2">Click below to run immediate satellite water telemetry:</div>
-                <button
-                  onClick={() => handleForceWaterScan(clickedCoords.lat, clickedCoords.lng, 'Waterway Inspection')}
-                  className="w-full py-1.5 rounded-lg bg-[#FFE500] hover:bg-yellow-400 text-black font-bold text-[10px] uppercase transition-colors shadow-sm flex items-center justify-center gap-1.5"
-                >
-                  <span>🌊 Scan as River / Waterway</span>
-                </button>
+              <div className="p-2.5 rounded-lg bg-surface-subtle border border-editorial-hairline text-[10px] text-editorial-charcoal mb-2">
+                <div className="font-bold text-black mb-1">Non-Aquatic Surface</div>
+                <div className="text-editorial-muted leading-relaxed">Water toxicity sensors (algae, dissolved oxygen, turbidity) are inactive on dry ground. Drop a pin on a visible river or water channel to inspect water quality.</div>
               </div>
 
               <div className="text-[9px] text-editorial-muted border-t border-editorial-hairline pt-1.5">
-                🗺️ Verified via OpenStreetMap Overpass & Open-Meteo
+                🗺️ Verified via Satellite Optical Spectral Analysis
               </div>
             </div>
           );
