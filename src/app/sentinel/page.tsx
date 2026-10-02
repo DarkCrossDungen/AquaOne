@@ -10,6 +10,7 @@ import { TimeMachineSlider } from '@/components/TimeMachineSlider';
 import { OneHealthAlerts } from '@/components/OneHealthAlerts';
 import { FhirInspector } from '@/components/FhirInspector';
 import { RegulatoryDossier } from '@/components/RegulatoryDossier';
+import { IncidentReportModal } from '@/components/IncidentReportModal';
 import {
   SatelliteOrbiter,
   SpectralPrism,
@@ -33,6 +34,7 @@ export default function SentinelPlatform() {
   // Modals state
   const [isFhirOpen, setIsFhirOpen] = useState<boolean>(false);
   const [isDossierOpen, setIsDossierOpen] = useState<boolean>(false);
+  const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
 
   // Notification Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -99,80 +101,7 @@ export default function SentinelPlatform() {
 
       {/* Main Operational Platform Container */}
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 space-y-12">
-        {/* =========================================================================
-            SECTION 0: PLAIN-ENGLISH WATER SAFETY STATUS (CLEAR FOR ANY NORMAL HUMAN)
-            ========================================================================= */}
-        <section className="rounded-3xl bg-black text-white p-6 sm:p-8 lg:p-10 shadow-floating space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-white/10 pb-6">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-lg bg-[#FFE500] text-black font-mono font-black text-xs uppercase tracking-wider">
-                  WATER SAFETY VERDICT: HIGH DANGER
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-white/10 text-white font-mono font-semibold text-xs uppercase">
-                  River: {currentBasin.riverName} ({currentBasin.country})
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-white font-sans">
-                Toxic Contamination Detected in River
-              </h1>
-              <p className="text-xs sm:text-sm text-[#CCCCCC] max-w-3xl leading-relaxed">
-                <strong>In Simple Words:</strong> European Space Agency satellites in space took photos of this river today. The computer detected an abnormal, dangerous bloom of poisonous blue-green algae and industrial sewage spreading down the river.
-              </p>
-            </div>
 
-            <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl shrink-0">
-              <div className="text-center font-mono">
-                <div className="text-xs text-[#AAAAAA] uppercase">Water Health Score</div>
-                <div className="text-3xl sm:text-4xl font-black text-[#FFE500] mt-0.5">
-                  {currentBasin.plume.wqiEquivalent}/100
-                </div>
-                <div className="text-[10px] text-white uppercase font-bold mt-0.5 bg-black px-2 py-0.5 rounded">
-                  Severely Polluted
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Practical Human Answers (Can I swim? Can I drink?) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-              <div className="flex items-center justify-between text-white font-bold uppercase">
-                <span>Can I swim or kayak here?</span>
-                <span className="px-2 py-0.5 rounded bg-red-600/30 text-white border border-red-500/50 font-black">
-                  NO · UNSAFE
-                </span>
-              </div>
-              <p className="text-[#AAAAAA] leading-relaxed">
-                Contact with skin causes severe blistering rashes, eye burning, and breathing spasms. Keep pets and children away from the riverbank.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-              <div className="flex items-center justify-between text-white font-bold uppercase">
-                <span>Can this water be consumed?</span>
-                <span className="px-2 py-0.5 rounded bg-red-600/30 text-white border border-red-500/50 font-black">
-                  NO · DO NOT DRINK
-                </span>
-              </div>
-              <p className="text-[#AAAAAA] leading-relaxed">
-                Ingesting this water causes violent stomach gastroenteritis, fever, and acute liver cell poisoning from microcystin toxins.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#FFE500]/10 border border-[#FFE500]/30 space-y-1.5">
-              <div className="flex items-center justify-between text-white font-bold uppercase">
-                <span>What action is taken?</span>
-                <span className="px-2 py-0.5 rounded bg-[#FFE500] text-black font-black">
-                  PRECAUTION SENT
-                </span>
-              </div>
-              <p className="text-[#DDDDDD] leading-relaxed">
-                AquaLens sent an automated early-warning alert to municipal drinking water intakes to close pumps before the toxic water arrives.
-              </p>
-            </div>
-          </div>
-        </section>
 
         {/* =========================================================================
             SECTION 1: RIVER SELECTOR & SATELLITE SCAN CONTROLLER
@@ -212,6 +141,137 @@ export default function SentinelPlatform() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* =========================================================================
+              WATER TEST & TOXICITY RESULTS FOR THIS CHOSEN LOCATION (IN SIMPLE WORDS)
+              ========================================================================= */}
+          <div className="rounded-2xl bg-black text-white p-5 sm:p-6 shadow-elevation space-y-4 border border-white/10">
+            {/* Headline Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/15 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded bg-[#FFE500] text-black font-mono font-bold text-[11px] uppercase tracking-wider">
+                    {currentBasin.flag} CURRENT TEST RESULTS
+                  </span>
+                  <span className="text-xs font-mono text-[#AAAAAA] uppercase">
+                    Location: {currentBasin.riverName} ({currentBasin.country})
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white font-sans mt-1">
+                  {currentBasin.plume.wqiEquivalent < 40
+                    ? '⚠️ Overall Water Verdict: DANGEROUS / TOXIC'
+                    : '🟡 Overall Water Verdict: MODERATE POLLUTION'
+                  }
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl shrink-0">
+                <span className="text-xs text-[#CCCCCC] font-mono uppercase">Water Score</span>
+                <span className="text-2xl sm:text-3xl font-black text-[#FFE500] font-mono">
+                  {currentBasin.plume.wqiEquivalent}/100
+                </span>
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-600/40 text-white font-mono">
+                  Unsafe
+                </span>
+              </div>
+            </div>
+
+            {/* Simple Words Explanations in 4 Large Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+              {/* Card 1: Toxicity & Algae Poison */}
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">1. Poison Algae Level</div>
+                <div className="text-base font-black text-[#FFE500]">{currentBasin.plume.chlorophyllConcentrationMgM3} µg/L</div>
+                <div className="font-bold text-white text-[11px] uppercase">
+                  {currentBasin.plume.chlorophyllConcentrationMgM3 >= 50 ? '⚠️ High Poison Risk' : 'Moderate Algae'}
+                </div>
+                <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
+                  <strong>In Simple Words:</strong> Thick green scum of poisonous bacteria (algae) is growing in the water.
+                </p>
+                <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
+                  🔬 IEEE: Chlorophyll-a via NDCI · LOINC 79177-2
+                </div>
+              </div>
+
+              {/* Card 2: Dissolved Oxygen */}
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">2. Oxygen in Water</div>
+                <div className="text-base font-black text-[#FFE500]">{currentBasin.spectralStats.dissolvedOxygenMgL} mg/L</div>
+                <div className="font-bold text-white text-[11px] uppercase">
+                  {currentBasin.spectralStats.dissolvedOxygenMgL < 4.0 ? '🚨 Very Low (Hypoxia)' : 'Low Oxygen'}
+                </div>
+                <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
+                  <strong>In Simple Words:</strong> The water does not have enough air. Fish and river plants are suffocating.
+                </p>
+                <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
+                  🔬 IEEE: Critical Hypoxia threshold &lt; 4.0 mg/L
+                </div>
+              </div>
+
+              {/* Card 3: Water Cloudiness / Mud */}
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">3. Mud & Cloudiness</div>
+                <div className="text-base font-black text-[#FFE500]">{currentBasin.spectralStats.turbidityNtu} NTU</div>
+                <div className="font-bold text-white text-[11px] uppercase">
+                  {currentBasin.spectralStats.turbidityNtu > 25 ? '⚠️ Very Dirty & Muddy' : 'Clean Water'}
+                </div>
+                <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
+                  <strong>In Simple Words:</strong> Dirt and city sewer runoff have made the water cloudy and brown.
+                </p>
+                <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
+                  🔬 IEEE: Nechad (2010) Model · LOINC 48421-2
+                </div>
+              </div>
+
+              {/* Card 4: Water Movement & Speed */}
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-[10px] text-[#AAAAAA] uppercase font-bold">4. Flow Speed & Spread</div>
+                <div className="text-base font-black text-[#FFE500]">{currentBasin.plume.flowVelocityKmH} km/h</div>
+                <div className="font-bold text-white text-[11px] uppercase">Moving Downstream</div>
+                <p className="text-[11px] text-[#BBBBBB] leading-relaxed pt-1">
+                  <strong>In Simple Words:</strong> The river is carrying the poisonous water down toward swimming spots and parks.
+                </p>
+                <div className="text-[9px] text-[#888888] pt-1 border-t border-white/10">
+                  🔬 IEEE: Open-Meteo Q + Manning Equation
+                </div>
+              </div>
+            </div>
+
+            {/* Practical Everyday Questions & WHO Global Verification */}
+            <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-4">
+                <div>
+                  <span className="text-[#AAAAAA] uppercase text-[10px] block">Can people swim here?</span>
+                  <strong className="text-red-400 font-bold">❌ NO — Causes skin rashes & burning eyes</strong>
+                </div>
+                <div>
+                  <span className="text-[#AAAAAA] uppercase text-[10px] block">Can people drink this?</span>
+                  <strong className="text-red-400 font-bold">❌ NO — Severe stomach sickness & liver risk</strong>
+                </div>
+                <div>
+                  <span className="text-[#AAAAAA] uppercase text-[10px] block">Public Registry Status:</span>
+                  <strong className="text-[#FFE500] font-bold">
+                    {currentBasin.whoRegistryStatus.escalationRequired
+                      ? '⚠️ Unreported Acute Spike on WHO Registry'
+                      : 'Known Non-Potable'}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+                <button
+                  onClick={() => setIsReportOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#FFE500] text-black font-bold text-[11px] uppercase tracking-wider hover:bg-yellow-400 transition-colors flex items-center gap-1.5"
+                >
+                  <ClinicalShield className="w-3.5 h-3.5 text-black" />
+                  <span>WHO Benchmark & Report</span>
+                </button>
+                <span className="text-[10px] text-white/80 bg-black px-2 py-1 rounded font-bold uppercase">
+                  EU 2000/60/EC
+                </span>
+              </div>
             </div>
           </div>
 
@@ -454,6 +514,12 @@ export default function SentinelPlatform() {
         basin={currentBasin}
         isOpen={isDossierOpen}
         onClose={() => setIsDossierOpen(false)}
+      />
+
+      <IncidentReportModal
+        basin={currentBasin}
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
       />
     </div>
   );

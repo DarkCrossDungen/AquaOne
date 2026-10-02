@@ -111,15 +111,6 @@ export default function Home() {
       icon: SatelliteOrbiter,
     },
     {
-      href: '/why-we-win',
-      title: 'Judging Criteria & Scorecard',
-      tag: 'Rubric Breakdown',
-      description:
-        'A transparent, evidence-based breakdown showing how AquaLens meets the 5 official hackathon criteria with head-to-head comparisons against manual testing.',
-      actionText: 'Review Criteria →',
-      icon: RegulatorySeal,
-    },
-    {
       href: '/impact',
       title: 'One Health & Clinical Impact',
       tag: 'Public Biosecurity',
@@ -167,10 +158,10 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/why-we-win"
+              href="/impact"
               className="px-8 py-3.5 rounded-full bg-surface-subtle hover:bg-black text-black hover:text-[#FFE500] font-mono font-bold text-xs uppercase tracking-widest border border-editorial-hairline transition-all duration-200 active:scale-95 shadow-softPill"
             >
-              Judging Criteria
+              Health Impact
             </Link>
 
             <button
@@ -357,7 +348,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Section 4: The 3 Operational Pages of AquaLens */}
+        {/* Section 4: Operational Portals of AquaLens */}
         <section className="space-y-6">
           <div className="flex items-end justify-between border-b border-editorial-hairline pb-4">
             <div>
@@ -369,11 +360,11 @@ export default function Home() {
               </h2>
             </div>
             <span className="hidden sm:inline text-xs text-editorial-muted font-mono uppercase font-semibold">
-              3 Distinct Functional Routes
+              Operational Platforms
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {CORE_MODULES.map((mod, mIdx) => {
               const IconComp = mod.icon;
               return (

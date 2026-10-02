@@ -22,7 +22,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const NAV_LINKS = [
     { href: '/', label: 'Overview' },
     { href: '/sentinel', label: 'Live Monitor' },
-    { href: '/why-we-win', label: 'Judging Criteria' },
     { href: '/impact', label: 'Health Impact' },
   ];
 

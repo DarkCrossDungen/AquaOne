@@ -226,11 +226,19 @@ AquaLens pre-programs the 5 official pilot study basins designated by the EU Hor
 ### Basin 5: Maribor, Slovenia (Drava River Urban Corridors)
 * **Coordinates:** `[46.5547, 15.6459]` | **Tile:** `33TWM`
 * **Pollutant:** Industrial thermal coolant effluent & localized cyanobacteria
-* **Parameters:** Chlorophyll-a: $39.5\ \mu\text{g/L}$ | Turbidity: $31\ \text{NTU}$ | WQI: $36/100$
+* **Parameters:** Chlorophyll-a: $39.5\ \mu\text{g/L}$ | Turbidity: $31\ \text{NTU}$ | WQI: $36/100$ | Dissolved Oxygen: $6.4\ \text{mg/L}$
 * **Downstream Receptors:**
   1. *Lent Embankment Promenade* ($1.1\text{ km}$, ETA: $0.7\text{h}$)
   2. *Maribor Island Public Lido & Baths* ($2.8\text{ km}$, ETA: $1.9\text{h}$)
   3. *Drava Wetland Nature Reserve* ($7.4\text{ km}$, ETA: $4.9\text{h}$)
+
+### Basin 6: Ganges River Basin (Global Sentinel Pilot, India)
+* **Coordinates:** `[25.3176, 83.0062]` | **Tile:** `44RRP`
+* **Significance:** Demonstrates AquaLens global satellite coverage beyond European borders. Supports over 500 million people with seasonal organic discharge, bathing ghat pathogen risks, and critical dissolved oxygen depletion.
+* **Parameters:** Chlorophyll-a: $54.6\ \mu\text{g/L}$ | Turbidity: $68.2\ \text{NTU}$ | WQI: $34/100$ | Dissolved Oxygen: $3.5\ \text{mg/L}$ [Severe Hypoxia]
+* **Downstream Receptors:**
+  1. *Assi Ghat Bathing Steps* ($1.6\text{ km}$, ETA: $0.67\text{h}$) — Acute gastroenteritis and cholera exposure risk.
+  2. *Municipal Water Intake #1* ($6.4\text{ km}$, ETA: $2.67\text{h}$) — Pathogenic bacterial breakthrough risk.
 
 ---
 
@@ -316,8 +324,6 @@ C:\Users\anand\Desktop\time\
 │   │   ├── page.tsx               # Home route: Overview, pipeline, spectral physics tabs
 │   │   ├── sentinel/
 │   │   │   └── page.tsx           # Operational cockpit: Water safety verdict, GPS, map, slider, alerts
-│   │   ├── why-we-win/
-│   │   │   └── page.tsx           # Judging criteria: 5 rubrics (100% weighted), head-to-head table
 │   │   ├── impact/
 │   │   │   └── page.tsx           # Clinical impact: Disease profiles, €4.2M+ savings, pilot basins
 │   │   └── api/
@@ -329,6 +335,7 @@ C:\Users\anand\Desktop\time\
 │   │   ├── SpectralViewer.tsx     # Multispectral switcher: RGB, NDWI, Chlorophyll, Turbidity, Thermal
 │   │   ├── TimeMachineSlider.tsx  # Dual-pass before/after slider with ◀ DRAG ▶ pill & metric cards
 │   │   ├── OneHealthAlerts.tsx    # Downstream POI cards, flow speed, arrival ETAs, advisory dispatch
+│   │   ├── IncidentReportModal.tsx# Rapid Incident Dispatch & Whistleblower Portal to authorities
 │   │   ├── FhirInspector.tsx      # HL7 FHIR modal with LOINC chips, JSON viewer, copy & download
 │   │   ├── RegulatoryDossier.tsx  # EU Directive 2000/60/EC legal report modal with print to PDF
 │   │   └── icons/
@@ -349,6 +356,7 @@ C:\Users\anand\Desktop\time\
 * **`src/components/SatelliteMap.tsx`:** Renders dynamic Leaflet satellite maps using ESRI World Imagery. Uses custom HTML divIcons for target reticles (`#FFE500` rotated square for the plume source and numbered black badges for downstream receptors). Draws the hydrological transport vector as an electric yellow dashed line.
 * **`src/components/TimeMachineSlider.tsx`:** An aerial river visualization where the user scrubs horizontally. The left reveals the pristine clean river; the right reveals the yellow toxic algae plume.
 * **`src/components/FhirInspector.tsx`:** Renders the serialized FHIR bundle in a monospace terminal box with one-click clipboard copying and `.json` file downloading.
+* **`src/components/IncidentReportModal.tsx`:** WHO Global Water Safety & Health Surveillance portal. Bypasses redundant local municipal paperwork by benchmarking water against international World Health Organization (WHO) standards (Chlorophyll $\le 10\ \mu\text{g/L}$, Dissolved Oxygen $\ge 5.0\ \text{mg/L}$, Turbidity $\le 5\ \text{NTU}$). Evaluates whether a toxic event is an unreported acute spike, links directly to the official WHO Water, Sanitation and Health division portal (`https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health`), and formats certified WHO surveillance dispatches (`#WHO-WASH-2026-...`).
 * **`src/components/RegulatoryDossier.tsx`:** Displays a formal legal briefing citing EU Directives 2000/60/EC and 2006/7/EC, with a native `window.print()` trigger to save as a legal PDF.
 
 ---
@@ -413,7 +421,7 @@ npm run lint
 If you are an AI model (Claude, GPT-4, Gemini) continuing this project in a new session:
 
 1. **Project Mission:** AquaLens is designed to win 1st Place in the OneAquaHealth IEEE Global Hackathon 2026.
-2. **Current Codebase State:** The platform is fully implemented with Next.js 15 App Router across 4 routes (`/`, `/sentinel`, `/why-we-win`, `/impact`).
+2. **Current Codebase State:** The platform is fully implemented with Next.js 15 App Router across 3 core routes (`/`, `/sentinel`, `/impact`).
 3. **Visual Style Rules (Strictly Enforced):**
    * Keep the strict 3-color palette: Obsidian Black (`#08080A`), Pure White (`#FFFFFF`), Electric Yellow (`#FFE500`).
    * Never re-introduce circular pulsing dots or rainbow tags.

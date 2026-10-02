@@ -47,8 +47,21 @@ export interface PilotBasin {
     ndwiMean: number;
     chlorophyllMean: number;
     turbidityNtu: number;
+    dissolvedOxygenMgL: number; // Dissolved Oxygen (mg/L) - Normal: 7-11 mg/L, Hypoxia: < 4 mg/L
     surfaceTempC: number;
     anomalousPixels: number;
+  };
+  whoRegistryStatus: {
+    isRegisteredAsNonPotable: boolean;
+    registryReference: string;
+    lastReportedNotice: string;
+    escalationRequired: boolean;
+    whoDrinkingRequirementX: {
+      chlorophyllMaxUgL: number; // e.g., 10.0 µg/L
+      dissolvedOxygenMinMgL: number; // e.g., 5.0 mg/L
+      turbidityMaxNtu: number; // e.g., 5.0 NTU
+      minimumDischargeM3s: number; // e.g., 12.0 m3/s
+    };
   };
 }
 

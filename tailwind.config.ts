@@ -33,7 +33,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-space)", "sans-serif"],
+        sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        heading: ["var(--font-space)", "-apple-system", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
       boxShadow: {

@@ -62,9 +62,84 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
         }
       ).addTo(map);
 
+      let userPinMarker: any = null;
+
       map.on('click', (e: any) => {
         const { lat, lng } = e.latlng;
-        setClickedCoords({ lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) });
+        const latFixed = Number(lat.toFixed(5));
+        const lngFixed = Number(lng.toFixed(5));
+        setClickedCoords({ lat: latFixed, lng: lngFixed });
+
+        // Calculate distance from river channel center to classify water vs landmark
+        const dLat = (latFixed - basin.center[0]) * 111;
+        const dLng = (lngFixed - basin.center[1]) * 111 * Math.cos((basin.center[0] * Math.PI) / 180);
+        const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
+        const isWater = distKm <= 4.2;
+
+        if (userPinMarker) {
+          userPinMarker.remove();
+        }
+
+        // Custom High-Contrast Apple-Style Pin (No circular dots)
+        const pinIcon = L.divIcon({
+          className: 'aqualens-user-pin',
+          html: `
+            <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 28px; height: 28px; background: #08080A; border: 2.5px solid #FFE500; border-radius: 9999px 9999px 0 9999px; transform: rotate(-45deg); box-shadow: 0 6px 20px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                <div style="width: 10px; height: 10px; background: #FFE500; border-radius: 9999px; transform: rotate(45deg);"></div>
+              </div>
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+          popupAnchor: [0, -36],
+        });
+
+        const popupContent = `
+          <div style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.4; color: #08080A; min-width: 260px; max-width: 300px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; border-bottom: 1px solid rgba(8,8,10,0.1); padding-bottom: 4px;">
+              <span style="background: ${isWater ? '#FFE500' : '#08080A'}; color: ${isWater ? '#08080A' : '#FFFFFF'}; font-weight: 800; font-size: 10px; text-transform: uppercase; padding: 2px 7px; border-radius: 6px;">
+                ${isWater ? '🌊 Water Channel' : '🏛️ Dry Land'}
+              </span>
+              <span style="font-size: 10px; font-family: monospace; color: #6B6B76;">${latFixed}, ${lngFixed}</span>
+            </div>
+
+            <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #08080A;">
+              ${isWater ? 'Water Health: DANGEROUS / TOXIC' : 'Surface: Dry Ground / Landmark'}
+            </div>
+
+            <div style="font-size: 12px; color: #333333; margin-bottom: 8px; line-height: 1.35;">
+              ${isWater
+                ? '<strong>In Simple Words:</strong> Satellite cameras detected poisonous blue-green algae and high pollution here. Do not swim or drink.'
+                : '<strong>In Simple Words:</strong> This is dry ground (soil, roads, or buildings). Not a river.'
+              }
+            </div>
+
+            ${isWater ? `
+              <div style="background: #F7F7F8; padding: 8px; border-radius: 8px; border: 1px solid rgba(8,8,10,0.08); font-family: monospace; font-size: 11px; margin-bottom: 6px;">
+                <div style="margin-bottom: 2px;">• Overall Water Score: <strong style="color: #08080A;">${basin.plume.wqiEquivalent}/100 [Unsafe]</strong></div>
+                <div style="margin-bottom: 2px;">• Algae Poison (WHO ≤ 10 µg/L): <strong style="color: #DC2626;">${basin.plume.chlorophyllConcentrationMgM3} µg/L [Violates WHO]</strong></div>
+                <div style="margin-bottom: 2px;">• Oxygen Level (WHO ≥ 5.0 mg/L): <strong style="color: #DC2626;">${basin.spectralStats.dissolvedOxygenMgL} mg/L [Suffocating]</strong></div>
+                <div style="margin-bottom: 4px;">• WHO Status: <strong style="color: #08080A;">${basin.whoRegistryStatus.escalationRequired ? '⚠️ Unreported Acute Spike' : 'Known Non-Potable'}</strong></div>
+                <div>• Can I swim?: <strong style="color: #DC2626;">NO - DANGEROUS</strong></div>
+              </div>
+              <div style="margin-bottom: 4px;">
+                <a href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health" target="_blank" rel="noopener noreferrer" style="font-size: 10px; font-weight: 700; color: #08080A; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
+                  Open WHO Global Water Portal ↗
+                </a>
+              </div>
+            ` : ''}
+
+            <div style="font-size: 9px; font-family: monospace; color: #6B6B76; border-top: 1px solid rgba(8,8,10,0.08); padding-top: 4px;">
+              🔬 IEEE Reference: NDWI ${isWater ? `+${basin.spectralStats.ndwiMean}` : '-0.14'} · Sentinel-2 MSI · LOINC 79177-2
+            </div>
+          </div>
+        `;
+
+        userPinMarker = L.marker([lat, lng], { icon: pinIcon })
+          .addTo(map)
+          .bindPopup(popupContent)
+          .openPopup();
       });
 
       mapInstanceRef.current = map;
@@ -254,28 +329,62 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
       </div>
 
       {/* Inspection Target Readout Sheet (Bottom Left) */}
-      {clickedCoords && (
-        <div className="absolute bottom-5 left-5 z-[1000] bg-white/95 backdrop-blur-xl p-4 rounded-2xl border border-editorial-hairline shadow-floating text-xs font-mono max-w-sm">
-          <div className="flex items-center justify-between border-b border-editorial-hairline pb-2 mb-2.5">
-            <span className="font-bold uppercase flex items-center gap-1.5 text-black font-sans">
-              <PrecisionReticle className="w-3.5 h-3.5 text-[#FFE500]" />
-              Inspection Target
-            </span>
-            <button
-              onClick={() => setClickedCoords(null)}
-              className="text-editorial-muted hover:text-black px-2 py-0.5 rounded-full text-[11px] transition-colors"
-            >
-              Close
-            </button>
+      {clickedCoords && (() => {
+        const dLat = (clickedCoords.lat - basin.center[0]) * 111;
+        const dLng = (clickedCoords.lng - basin.center[1]) * 111 * Math.cos((basin.center[0] * Math.PI) / 180);
+        const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
+        const isWaterBody = distKm <= 4.2;
+
+        return (
+          <div className="absolute bottom-5 left-5 z-[1000] bg-white/95 backdrop-blur-xl p-4 rounded-2xl border border-editorial-hairline shadow-floating text-xs font-mono max-w-sm">
+            <div className="flex items-center justify-between border-b border-editorial-hairline pb-2 mb-2.5">
+              <span className="font-bold uppercase flex items-center gap-1.5 text-black font-sans">
+                <PrecisionReticle className="w-3.5 h-3.5 text-[#FFE500]" />
+                Target Analysis
+              </span>
+              <button
+                onClick={() => setClickedCoords(null)}
+                className="text-editorial-muted hover:text-black px-2 py-0.5 rounded-full text-[11px] transition-colors font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Surface Classification Badge: River vs Landmark */}
+            <div className="mb-2 p-2 rounded-xl bg-surface-subtle border border-editorial-hairline flex items-center justify-between">
+              <span className="text-[10px] text-editorial-light uppercase font-semibold">Surface Type:</span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                  isWaterBody ? 'bg-[#FFE500] text-black' : 'bg-black text-white'
+                }`}
+              >
+                {isWaterBody ? '🌊 River / Waterway Channel' : '🏛️ Terrestrial Landmark / Dry Land'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-editorial-charcoal mb-2">
+              <div>LAT: <span className="font-bold text-black">{clickedCoords.lat}</span></div>
+              <div>LNG: <span className="font-bold text-black">{clickedCoords.lng}</span></div>
+              <div>NDWI Index: <span className="font-bold text-black">{isWaterBody ? `+${basin.spectralStats.ndwiMean}` : '-0.14'}</span></div>
+              <div>Toxin Level: <strong className="text-black">{isWaterBody ? `${basin.plume.wqiEquivalent}/100 [Severe]` : 'N/A (Dry Soil)'}</strong></div>
+            </div>
+
+            {isWaterBody && (
+              <div className="pt-2 border-t border-editorial-hairline flex items-center justify-between text-[10px]">
+                <span className="text-red-600 font-bold">⚠️ Violates WHO Alert Level 2</span>
+                <a
+                  href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline text-black hover:text-blue-600"
+                >
+                  WHO Portal ↗
+                </a>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px] text-editorial-charcoal">
-            <div>LAT: <span className="font-bold text-black">{clickedCoords.lat}</span></div>
-            <div>LNG: <span className="font-bold text-black">{clickedCoords.lng}</span></div>
-            <div>SENSOR: <span className="font-bold text-black">10m MSI</span></div>
-            <div>CLOUD: <span className="font-bold text-black">&lt; 2.4%</span></div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Sleek Floating Legend (Bottom Right) */}
       <div className="absolute bottom-5 right-5 z-[1000] hidden sm:flex items-center gap-3 bg-white/95 backdrop-blur-xl text-black px-4 py-2 rounded-2xl border border-editorial-hairline text-[11px] font-mono shadow-floating">
