@@ -2,8 +2,7 @@
 
 > **IEEE OneAquaHealth Global Hackathon 2026 Submission**  
 > **Primary Track:** Track 2 — Data-to-Insight  
-> **Cross-Cutting Tracks:** Track 6 (Resilience Informatics) & Track 7 (Digital Health Standards / HL7 FHIR)  
-> **Target:** 1st Place Overall ($1,500 + IEEE Certificate of Merit)
+> **Cross-Cutting Tracks:** Track 6 (Resilience Informatics) & Track 7 (Digital Health Standards / HL7 FHIR)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![Standards: HL7 FHIR R4](https://img.shields.io/badge/Standards-HL7%20FHIR%20R4-FFE500.svg)](https://hl7.org/fhir/)
@@ -210,13 +209,13 @@ Open your browser to:
 
 ---
 
-## 🏆 IEEE Hackathon Scoring Alignment
+## 💡 Why We Need AquaLens
 
-| Rubric (Weight) | Why AquaLens Wins |
+| Core Dimension | Why This Platform Is Essential |
 | :--- | :--- |
-| **Impact & Mission (30%)** | Bridges space satellites directly to emergency hospital rooms (One Health), preventing citizen poisonings before they happen. |
-| **Innovation & Creativity (20%)** | Autonomous space-based river surveillance replacing manual bottle sampling. Interactive before/after time machine. |
-| **Technical Execution (20%)** | Next.js 15, Leaflet ESRI mapping, real optical physics formulas (NDWI, NDCI, Nechad), and HL7 FHIR R4 interoperability. |
-| **Usability & UX (15%)** | Plain-English explanations for every reading, Apple-inspired 3-color theme, and 1-click pin dropping anywhere on Earth. |
-| **Feasibility & Scalability (15%)** | 100% legal, open-access public data (EU Regulation 377/2014), zero paid API keys, infinitely scalable to any river on Earth. |
+| **Healthcare & Prevention** | Bridges space satellites directly to emergency hospital rooms (One Health), preventing citizen poisonings and waterborne outbreaks before they occur. |
+| **Continuous Autonomous Surveillance** | Replaces slow, manual bottle grab-sampling with automated satellite orbit passes covering entire river corridors every 2 to 5 days. |
+| **Scientific & Clinical Interoperability** | Built on real optical physics formulas (NDWI, NDCI, Nechad) and connects directly to hospital health record systems via international HL7 FHIR R4 and LOINC standards. |
+| **Civic Empowerment & Transparency** | Translates complex optical satellite data into plain-language verdicts ("Can I swim? NO") and gives citizens a 1-click pathway to file complaints backed by verified space evidence. |
+| **Global Scalability & Open Access** | Operates on 100% open-access public Earth Observation data (Copernicus Sentinel-2 & Landsat), requiring zero paid API keys and capable of monitoring any river basin on Earth. |
 
