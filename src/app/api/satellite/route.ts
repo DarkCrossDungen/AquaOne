@@ -119,25 +119,30 @@ export async function GET(request: Request) {
     const dLng = (queryLng - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180);
     const distFromPlumeKm = Math.sqrt(dLat * dLat + dLng * dLng);
 
-    // If within regional basin reach (< 120km)
+    // Deterministic spatial hash for coordinate-unique variation
+    const seed1 = Math.abs(Math.sin(queryLat * 12.9898 + queryLng * 78.233)) * 43758.5453;
+    const hash1 = seed1 - Math.floor(seed1);
+    const seed2 = Math.abs(Math.sin(queryLat * 78.233 + queryLng * 12.9898)) * 23421.6312;
+    const hash2 = seed2 - Math.floor(seed2);
+    const seed3 = Math.abs(Math.sin(queryLat * 43.1387 + queryLng * 94.6703)) * 17653.2947;
+    const hash3 = seed3 - Math.floor(seed3);
+
     if (distFromPlumeKm < 120) {
-      liveWqiVal = Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlumeKm * 3.5, 38)));
-      liveChlorophyll = Math.max(9.0, Number((basin.plume.chlorophyllConcentrationMgM3 - Math.min(distFromPlumeKm * 5.5, basin.plume.chlorophyllConcentrationMgM3 - 10)).toFixed(1)));
-      liveDO = Math.min(8.2, Number((basin.spectralStats.dissolvedOxygenMgL + Math.min(distFromPlumeKm * 0.35, 3.8)).toFixed(1)));
-      liveTurbidity = Math.max(4.5, Number((basin.spectralStats.turbidityNtu - Math.min(distFromPlumeKm * 2.8, basin.spectralStats.turbidityNtu - 6)).toFixed(1)));
-      liveNdwi = Number((basin.spectralStats.ndwiMean + Math.sin(queryLat * 10 + queryLng * 10) * 0.05).toFixed(2));
+      const df = Math.min(distFromPlumeKm / 120, 1);
+      liveWqiVal = Math.max(15, Math.min(85, Math.round(basin.plume.wqiEquivalent + df * 35 + hash1 * 15)));
+      liveChlorophyll = Math.max(5, Math.min(120, Number((basin.plume.chlorophyllConcentrationMgM3 * (1 - df * 0.6) + hash2 * 20).toFixed(1))));
+      liveDO = Math.max(2.0, Math.min(9.5, Number((basin.spectralStats.dissolvedOxygenMgL + df * 2.5 + hash3 * 2.0).toFixed(1))));
+      liveTurbidity = Math.max(3, Math.min(95, Number((basin.spectralStats.turbidityNtu * (1 - df * 0.5) + hash1 * 15).toFixed(1))));
+      liveNdwi = Number((0.25 + hash1 * 0.35).toFixed(2));
     } else {
       // Global custom coordinate outside known pilot basins
-      const seed = Math.abs(Math.sin(queryLat * 12.9898 + queryLng * 78.233)) * 43758.5453;
-      const norm = seed - Math.floor(seed);
-
-      liveChlorophyll = Number((15.0 + norm * 75.0).toFixed(1));
-      liveTurbidity = Number((10.0 + (1 - norm) * 80.0).toFixed(1));
-      liveTemp = Number((18.0 + norm * 8.0).toFixed(1));
-      liveDO = Number((3.0 + (1 - norm) * 5.5).toFixed(1));
+      liveChlorophyll = Number((8 + hash2 * 80).toFixed(1));
+      liveTurbidity = Number((5 + hash1 * 85).toFixed(1));
+      liveTemp = Number((18.0 + hash1 * 8.0).toFixed(1));
+      liveDO = Number((2.5 + hash3 * 6.5).toFixed(1));
       const computed = computeSatelliteWQI(liveChlorophyll, liveTurbidity, liveTemp);
       liveWqiVal = computed.wqi;
-      liveNdwi = Number((0.25 + norm * 0.35).toFixed(2));
+      liveNdwi = Number((0.25 + hash1 * 0.35).toFixed(2));
     }
   }
 

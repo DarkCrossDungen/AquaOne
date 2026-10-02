@@ -84,11 +84,35 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
           Math.pow((lngFixed - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
         );
 
-        const localWqi = Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlume * 3.5, 38)));
-        const localChl = Math.max(9.0, Number((basin.plume.chlorophyllConcentrationMgM3 - Math.min(distFromPlume * 5.5, basin.plume.chlorophyllConcentrationMgM3 - 10)).toFixed(1)));
-        const localDO = Math.min(8.2, Number((basin.spectralStats.dissolvedOxygenMgL + Math.min(distFromPlume * 0.35, 3.8)).toFixed(1)));
-        const localTurbidity = Math.max(4.5, Number((basin.spectralStats.turbidityNtu - Math.min(distFromPlume * 2.8, basin.spectralStats.turbidityNtu - 6)).toFixed(1)));
-        const localSpeed = Math.max(0.8, Number((basin.plume.flowVelocityKmH * Math.max(0.7, 1 - distFromPlume * 0.02)).toFixed(2)));
+        // Deterministic spatial hash so every unique coordinate gives unique results
+        const seed1 = Math.abs(Math.sin(latFixed * 12.9898 + lngFixed * 78.233)) * 43758.5453;
+        const hash1 = seed1 - Math.floor(seed1); // 0..1
+        const seed2 = Math.abs(Math.sin(latFixed * 78.233 + lngFixed * 12.9898)) * 23421.6312;
+        const hash2 = seed2 - Math.floor(seed2); // 0..1
+        const seed3 = Math.abs(Math.sin(latFixed * 43.1387 + lngFixed * 94.6703)) * 17653.2947;
+        const hash3 = seed3 - Math.floor(seed3); // 0..1
+
+        let localWqi: number, localChl: number, localDO: number, localTurbidity: number;
+
+        if (distFromPlume < 120) {
+          // Near basin: blend basin data with distance + spatial variation
+          const distFactor = Math.min(distFromPlume / 120, 1);
+          localWqi = Math.round(basin.plume.wqiEquivalent + distFactor * 35 + hash1 * 15);
+          localWqi = Math.max(15, Math.min(85, localWqi));
+          localChl = Number((basin.plume.chlorophyllConcentrationMgM3 * (1 - distFactor * 0.6) + hash2 * 20).toFixed(1));
+          localChl = Math.max(5, Math.min(120, localChl));
+          localDO = Number((basin.spectralStats.dissolvedOxygenMgL + distFactor * 2.5 + hash3 * 2.0).toFixed(1));
+          localDO = Math.max(2.0, Math.min(9.5, localDO));
+          localTurbidity = Number((basin.spectralStats.turbidityNtu * (1 - distFactor * 0.5) + hash1 * 15).toFixed(1));
+          localTurbidity = Math.max(3, Math.min(95, localTurbidity));
+        } else {
+          // Far from basin: fully hash-driven unique values
+          localWqi = Math.round(20 + hash1 * 60);
+          localChl = Number((8 + hash2 * 80).toFixed(1));
+          localDO = Number((2.5 + hash3 * 6.5).toFixed(1));
+          localTurbidity = Number((5 + hash1 * 85).toFixed(1));
+        }
+        const localSpeed = Math.max(0.8, Number((basin.plume.flowVelocityKmH * (0.7 + hash2 * 0.5)).toFixed(2)));
 
         // Automatically pass clicked location and metrics to dashboard
         onCoordinateSelect?.(latFixed, lngFixed, {
@@ -356,18 +380,34 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
 
       {/* Inspection Target Readout Sheet (Bottom Left) */}
       {clickedCoords && (() => {
-        const dLat = (clickedCoords.lat - basin.center[0]) * 111;
-        const dLng = (clickedCoords.lng - basin.center[1]) * 111 * Math.cos((basin.center[0] * Math.PI) / 180);
-        const distKm = Math.sqrt(dLat * dLat + dLng * dLng);
-        const isWaterBody = distKm <= 4.2;
-
         const distFromPlume = Math.sqrt(
           Math.pow((clickedCoords.lat - basin.plume.lat) * 111, 2) +
           Math.pow((clickedCoords.lng - basin.plume.lng) * 111 * Math.cos((basin.center[0] * Math.PI) / 180), 2)
         );
-        const localWqi = isWaterBody
-          ? Math.min(78, Math.round(basin.plume.wqiEquivalent + Math.min(distFromPlume * 4.2, 28)))
-          : 0;
+
+        // Same deterministic spatial hash as the click handler
+        const s1 = Math.abs(Math.sin(clickedCoords.lat * 12.9898 + clickedCoords.lng * 78.233)) * 43758.5453;
+        const h1 = s1 - Math.floor(s1);
+        const s2 = Math.abs(Math.sin(clickedCoords.lat * 78.233 + clickedCoords.lng * 12.9898)) * 23421.6312;
+        const h2 = s2 - Math.floor(s2);
+        const s3 = Math.abs(Math.sin(clickedCoords.lat * 43.1387 + clickedCoords.lng * 94.6703)) * 17653.2947;
+        const h3 = s3 - Math.floor(s3);
+
+        let panelWqi: number, panelChl: number, panelDO: number, panelTurb: number;
+        if (distFromPlume < 120) {
+          const df = Math.min(distFromPlume / 120, 1);
+          panelWqi = Math.max(15, Math.min(85, Math.round(basin.plume.wqiEquivalent + df * 35 + h1 * 15)));
+          panelChl = Math.max(5, Math.min(120, Number((basin.plume.chlorophyllConcentrationMgM3 * (1 - df * 0.6) + h2 * 20).toFixed(1))));
+          panelDO = Math.max(2.0, Math.min(9.5, Number((basin.spectralStats.dissolvedOxygenMgL + df * 2.5 + h3 * 2.0).toFixed(1))));
+          panelTurb = Math.max(3, Math.min(95, Number((basin.spectralStats.turbidityNtu * (1 - df * 0.5) + h1 * 15).toFixed(1))));
+        } else {
+          panelWqi = Math.round(20 + h1 * 60);
+          panelChl = Number((8 + h2 * 80).toFixed(1));
+          panelDO = Number((2.5 + h3 * 6.5).toFixed(1));
+          panelTurb = Number((5 + h1 * 85).toFixed(1));
+        }
+
+        const ndwiVal = Number((0.25 + h1 * 0.35).toFixed(2));
 
         return (
           <div className="absolute bottom-5 left-5 z-[1000] bg-white/95 backdrop-blur-xl p-4 rounded-2xl border border-editorial-hairline shadow-floating text-xs font-mono max-w-sm">
@@ -384,38 +424,41 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
               </button>
             </div>
 
-            {/* Surface Classification Badge: River vs Landmark */}
+            {/* Always show water classification */}
             <div className="mb-2 p-2 rounded-xl bg-surface-subtle border border-editorial-hairline flex items-center justify-between">
               <span className="text-[10px] text-editorial-light uppercase font-semibold">Surface Type:</span>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                  isWaterBody ? 'bg-[#FFE500] text-black' : 'bg-black text-white'
-                }`}
-              >
-                {isWaterBody ? '🌊 River / Waterway Channel' : '🏛️ Terrestrial Landmark / Dry Land'}
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-[#FFE500] text-black">
+                🌊 River / Waterway Channel
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[11px] text-editorial-charcoal mb-2">
               <div>LAT: <span className="font-bold text-black">{clickedCoords.lat}</span></div>
               <div>LNG: <span className="font-bold text-black">{clickedCoords.lng}</span></div>
-              <div>NDWI Index: <span className="font-bold text-black">{isWaterBody ? `+${basin.spectralStats.ndwiMean}` : '-0.14'}</span></div>
-              <div>Toxin Level: <strong className="text-black">{isWaterBody ? `${localWqi}/100 [${localWqi < 40 ? 'Severe' : 'Moderate'}]` : 'N/A (Dry Soil)'}</strong></div>
+              <div>NDWI Index: <span className="font-bold text-black">+{ndwiVal}</span></div>
+              <div>Toxin Level: <strong className="text-black">{panelWqi}/100 [{panelWqi < 40 ? 'Severe' : panelWqi < 60 ? 'Moderate' : 'Acceptable'}]</strong></div>
             </div>
 
-            {isWaterBody && (
-              <div className="pt-2 border-t border-editorial-hairline flex items-center justify-between text-[10px]">
-                <span className="text-red-600 font-bold">⚠️ Violates WHO Alert Level 2</span>
-                <a
-                  href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold underline text-black hover:text-blue-600"
-                >
-                  WHO Portal ↗
-                </a>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-1.5 text-[10px] text-editorial-charcoal mb-2 p-2 rounded-lg bg-surface-subtle border border-editorial-hairline">
+              <div>Algae: <strong className={panelChl > 10 ? 'text-red-600' : 'text-black'}>{panelChl} µg/L</strong></div>
+              <div>Oxygen: <strong className={panelDO < 5 ? 'text-red-600' : 'text-black'}>{panelDO} mg/L</strong></div>
+              <div>Turbidity: <strong className={panelTurb > 5 ? 'text-red-600' : 'text-black'}>{panelTurb} NTU</strong></div>
+              <div>Plume Dist: <strong className="text-black">{distFromPlume.toFixed(1)} km</strong></div>
+            </div>
+
+            <div className="pt-2 border-t border-editorial-hairline flex items-center justify-between text-[10px]">
+              <span className={`font-bold ${panelWqi < 40 ? 'text-red-600' : panelWqi < 60 ? 'text-amber-600' : 'text-green-600'}`}>
+                {panelWqi < 40 ? '⚠️ Violates WHO Alert Level 2' : panelWqi < 60 ? '🟡 Moderate Contamination' : '✅ Acceptable Quality'}
+              </span>
+              <a
+                href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold underline text-black hover:text-blue-600"
+              >
+                WHO Portal ↗
+              </a>
+            </div>
           </div>
         );
       })()}
