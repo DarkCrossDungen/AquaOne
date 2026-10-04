@@ -304,12 +304,12 @@ Verification Protocol: Copernicus Sentinel-2 Multispectral Instrument (MSI)`;
                     Official Global Authority
                   </span>
                   <a
-                    href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
+                    href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health/water-safety-and-quality"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-bold text-black hover:text-blue-600 underline flex items-center gap-1 font-sans"
                   >
-                    <span>Visit Official WHO Water, Sanitation and Health Portal</span>
+                    <span>Visit Official WHO Water Safety & Quality Portal</span>
                     <span className="text-[10px]">↗</span>
                   </a>
                   <p className="text-[10px] text-editorial-muted">
@@ -400,12 +400,12 @@ Verification Protocol: Copernicus Sentinel-2 Multispectral Instrument (MSI)`;
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <a
-                  href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
+                  href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health/water-safety-and-quality"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-5 py-2.5 rounded-full bg-[#FFE500] text-black font-bold text-xs uppercase tracking-wider hover:bg-yellow-400 transition-colors shadow-softPill flex items-center gap-1.5 font-sans"
                 >
-                  <span>Open WHO Global Water Portal</span>
+                  <span>Open WHO Water Safety & Quality Portal</span>
                   <span>↗</span>
                 </a>
                 <button

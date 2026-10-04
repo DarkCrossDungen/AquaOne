@@ -25,7 +25,7 @@
 
 ---
 
-## 🌊 The 6 Monitored Pilot Rivers & Their Real Scores
+## 🌊 The 4 Monitored Pilot Rivers & Their Real Scores
 
 Every river has its own distinct water quality score (0 to 100, where 100 is pure spring water and 0 is extreme poison). **Each river displays its own real-time score:**
 
@@ -35,10 +35,8 @@ Every river has its own distinct water quality score (0 to 100, where 100 is pur
 | **Mondego River** | 🇵🇹 **Coimbra, Portugal** | **32 / 100** *(Poor)* | **Agricultural Phosphate Runoff & Bacteria**. Fertilizer overload from upstream farms. |
 | **Leie & Scheldt Canals** | 🇧🇪 **Ghent, Belgium** | **41 / 100** *(Moderate)* | **Industrial Chemical Dirt & Shipping Turbidity** ($44.2\ \text{NTU}$). High heavy-metal risk. |
 | **Calore & Sabato Rivers** | 🇮🇹 **Benevento, Italy** | **46 / 100** *(Moderate)* | **Post-Flood Silt & Mud Shock**. Construction erosion and organic mountain runoff. |
-| **Drava River** | 🇸🇮 **Maribor, Slovenia** | **53 / 100** *(Moderate)* | **Thermal Effluent & Bacteria**. Water is too warm, creating dangerous bacteria pockets. |
-| **Ganges River** | 🇮🇳 **Varanasi Corridor, India** | **34 / 100** *(Poor)* | **Severe Hypoxia & Organic Pollutants** ($3.5\ \text{mg/L}$ oxygen). Fish suffocation alert. |
 
-> **Note on Custom GPS Checks:** You are not limited to these 6 rivers. You can enter **any latitude and longitude on Earth** (or click the map). AquaLens dynamically computes real-time water quality based on satellite optical reflectance at that exact coordinate.
+> **Note on Custom GPS Checks:** You are not limited to these 4 rivers. You can enter **any latitude and longitude on Earth** (or click the map). AquaLens dynamically computes real-time water quality based on satellite optical reflectance at that exact coordinate.
 
 ---
 
@@ -92,7 +90,7 @@ When citizens report dirty river water to local city offices, reports are often 
 Here is the exact step-by-step procedure for a user to upload a pollution complaint:
 
 1. **Step 1: Select Your River or Enter GPS Coordinates**
-   * Click any of the **6 River Buttons** (Toulouse, Coimbra, Ghent, Benevento, Maribor, Ganges) or enter your city's latitude/longitude and click **"Lock GPS"**.
+   * Click any of the **4 River Buttons** (Toulouse, Coimbra, Ghent, Benevento) or enter your city's latitude/longitude and click **"Lock GPS"**.
 2. **Step 2: Open the WHO Surveillance Portal**
    * Click the **"WHO Report & Benchmarks"** button in the top action bar.
 3. **Step 3: Review the Automated Evidence (Requirement X vs. Found Amount)**
@@ -107,20 +105,18 @@ Here is the exact step-by-step procedure for a user to upload a pollution compla
    * *Alternatively*, click **"Copy Evidence"** to copy the formatted forensic payload into your clipboard and paste it directly into your local police, municipal environmental agency, or news tip portal.
 6. **Step 6: Follow-Up & Public Escalation**
    * Keep your dispatch ID reference.
-   * Use the **"Open WHO Global Water Portal"** button to view active international sanitation advisories.
+   * Use the **"Open WHO Water Safety & Quality Portal"** button to visit the official [WHO Water Safety & Quality division](https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health/water-safety-and-quality).
 
 ---
 
 ## 🗺️ How to Use AquaLens & Test Any River
 
 ### 1. Choosing a River or Location
-* Click any of the **6 River Pilot Buttons** at the top of the monitor:
+* Click any of the **4 River Pilot Buttons** at the top of the monitor:
   * 🇫🇷 **Toulouse** (Canal du Midi / Touch)
   * 🇵🇹 **Coimbra** (Mondego)
   * 🇧🇪 **Ghent** (Leie / Scheldt)
   * 🇮🇹 **Benevento** (Calore / Sabato)
-  * 🇸🇮 **Maribor** (Drava)
-  * 🇮🇳 **Ganges** (Varanasi)
 * Or enter any custom GPS coordinates on Earth and click **"Lock GPS"**.
 
 ### 2. Dropping Pins on the Satellite Map

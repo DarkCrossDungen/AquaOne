@@ -107,8 +107,8 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
         </div>
 
         <div style="margin-bottom: 4px;">
-          <a href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health" target="_blank" rel="noopener noreferrer" style="font-size: 10px; font-weight: 700; color: #08080A; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
-            Open WHO Global Water Portal ↗
+          <a href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health/water-safety-and-quality" target="_blank" rel="noopener noreferrer" style="font-size: 10px; font-weight: 700; color: #08080A; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
+            Open WHO Water Safety & Quality Portal ↗
           </a>
         </div>
 
@@ -598,12 +598,12 @@ export const SatelliteMap: React.FC<SatelliteMapProps> = ({
                 {metrics.wqi < 40 ? '⚠️ Violates WHO Alert Level 2' : metrics.wqi < 60 ? '🟡 Moderate Contamination' : '✅ Acceptable Quality'}
               </span>
               <a
-                href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health"
+                href="https://www.who.int/teams/environment-climate-change-and-health/water-sanitation-and-health/water-safety-and-quality"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-bold underline text-black hover:text-blue-600"
               >
-                WHO Portal ↗
+                WHO Quality Portal ↗
               </a>
             </div>
           </div>
