@@ -67,16 +67,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Global Action Modals: Strict Triad (Black / White / Yellow) */}
         <div className="flex items-center gap-2">
-          {/* Hospital Medical Alert Data Trigger */}
+          {/* Clinical Health Data Trigger */}
           {onOpenFhir && (
             <button
               onClick={onOpenFhir}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-subtle hover:bg-black text-black hover:text-[#FFE500] border border-editorial-hairline text-xs font-mono font-semibold uppercase transition-all duration-200 active:scale-95 shadow-softPill"
-              title="Hospital Emergency Data (HL7 FHIR R4 Standard)"
+              title="Clinical Health Observation Data (HL7 FHIR R4 Standard)"
             >
               <FhirNodeTerminal className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Hospital Alert (FHIR)</span>
-              <span className="lg:hidden">Hospital Alert</span>
+              <span className="hidden lg:inline">Clinical FHIR</span>
+              <span className="lg:hidden">FHIR Data</span>
             </button>
           )}
 

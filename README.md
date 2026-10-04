@@ -20,8 +20,7 @@
 ## 🌟 Quick Overview: What is AquaLens in Simple Words?
 
 > **The Problem:** When factories dump toxic chemicals or poisonous green algae blooms in a river, nobody knows until people swim in it, drink it, and end up in the emergency room. Testing water by hand with sample bottles is slow, expensive, and leaves 99% of rivers unmonitored.
->
-> **The Solution:** **AquaLens uses satellites in space to check rivers.** European Space Agency (ESA) satellites photograph the Earth from 786 km above. AquaLens scans the light reflection from the water to calculate if it is clean or toxic. If it finds poison algae, low oxygen, or sewage, it alerts hospitals and drinking water plants hours before the toxic water reaches them.
+> **The Solution:** **AquaLens uses satellites in space to check rivers.** European Space Agency (ESA) satellites photograph the Earth from 786 km above. AquaLens scans the light reflection from the water to calculate if it is clean or toxic. If it finds poison algae, low oxygen, or sewage, it models downstream arrival times for drinking water plants and recreation sites hours before contaminated water reaches them.
 
 ---
 
@@ -199,7 +198,7 @@ AquaLens is grounded in international environmental law:
 
 ## 🏥 Clinical Interoperability: HL7 FHIR R4 & Medical Codes
 
-AquaLens connects space surveillance directly to hospital EHR systems:
+AquaLens maps satellite optical observations to international clinical health standards (HL7 FHIR R4) with standardized LOINC and ICD-10 diagnostic codes:
 * **HL7 FHIR R4 Endpoint:** `/api/fhir?basinId=...`
 * **LOINC Standards:**
   * `LOINC 79177-2`: *Microcystin and nodularin [Mass/volume] in Water*
@@ -256,9 +255,9 @@ Open your browser to:
 
 | Core Dimension | Why This Platform Is Essential |
 | :--- | :--- |
-| **Healthcare & Prevention** | Bridges space satellites directly to emergency hospital rooms (One Health), preventing citizen poisonings and waterborne outbreaks before they occur. |
+| **Healthcare & Prevention** | Connects space satellites directly to One Health epidemiology, mapping water contamination to downstream public health risks and ICD-10 disease codes. |
 | **Continuous Autonomous Surveillance** | Replaces slow, manual bottle grab-sampling with automated satellite orbit passes covering entire river corridors every 2 to 5 days. |
-| **Scientific & Clinical Interoperability** | Built on real optical physics formulas (NDWI, NDCI, Nechad) and connects directly to hospital health record systems via international HL7 FHIR R4 and LOINC standards. |
+| **Scientific & Clinical Interoperability** | Built on real optical physics formulas (NDWI, NDCI, Nechad) and exports clinical health observation bundles using international HL7 FHIR R4 and LOINC standards. |
 | **Civic Empowerment & Transparency** | Translates complex optical satellite data into plain-language verdicts ("Can I swim? NO") and gives citizens a 1-click pathway to file complaints backed by verified space evidence. |
 | **Global Scalability & Open Access** | Operates on 100% open-access public Earth Observation data (Copernicus Sentinel-2 & Landsat), requiring zero paid API keys and capable of monitoring any river basin on Earth. |
 

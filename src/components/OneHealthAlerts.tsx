@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PilotBasin, DownstreamPOI } from '@/lib/types';
 import { ClinicalShield, HydraulicStream } from '@/components/icons/CustomIcons';
 
@@ -10,11 +10,6 @@ interface OneHealthAlertsProps {
 }
 
 export const OneHealthAlerts: React.FC<OneHealthAlertsProps> = ({ basin, selectedPOI }) => {
-  const [dispatchedAlerts, setDispatchedAlerts] = useState<Record<string, boolean>>({});
-
-  const handleDispatch = (poiId: string) => {
-    setDispatchedAlerts((prev) => ({ ...prev, [poiId]: true }));
-  };
 
   return (
     <div className="rounded-3xl bg-white border border-editorial-hairline p-6 lg:p-10 shadow-elevation flex flex-col gap-8 transition-all">
@@ -44,7 +39,6 @@ export const OneHealthAlerts: React.FC<OneHealthAlertsProps> = ({ basin, selecte
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {basin.downstreamPOIs.map((poi, idx) => {
           const isCritical = poi.riskLevel === 'critical';
-          const isDispatched = dispatchedAlerts[poi.id];
           const isSelected = selectedPOI?.id === poi.id;
 
           return (
@@ -103,21 +97,12 @@ export const OneHealthAlerts: React.FC<OneHealthAlertsProps> = ({ basin, selecte
                 </div>
               </div>
 
-              {/* Action Button: Black / Yellow State */}
-              <div>
-                {isDispatched ? (
-                  <div className="w-full py-2.5 px-4 rounded-full bg-[#FFE500] text-black text-xs font-mono font-bold uppercase flex items-center justify-center gap-2 shadow-sm">
-                    <span className="font-bold">✓</span>
-                    <span>Advisory Transmitted</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleDispatch(poi.id)}
-                    className="w-full py-2.5 px-4 rounded-full bg-black hover:bg-[#FFE500] text-[#FFE500] hover:text-black text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-softPill"
-                  >
-                    <span>Dispatch Precautionary Alert</span>
-                  </button>
-                )}
+              {/* Verified Risk Category Badge */}
+              <div className="pt-3 border-t border-editorial-hairline flex items-center justify-between text-[11px] font-mono">
+                <span className="text-editorial-light uppercase text-[10px]">Receptor Type:</span>
+                <span className="font-bold text-black uppercase">
+                  {poi.type.replace('_', ' ')}
+                </span>
               </div>
             </div>
           );

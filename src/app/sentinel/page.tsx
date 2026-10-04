@@ -545,11 +545,11 @@ export default function SentinelPlatform() {
 
             <div className="p-6 rounded-2xl bg-white border border-editorial-hairline shadow-softPill space-y-3">
               <div className="flex items-center justify-between border-b border-editorial-hairline pb-2">
-                <span className="font-bold text-black uppercase font-sans text-sm">4. Clinic Preemption</span>
+                <span className="font-bold text-black uppercase font-sans text-sm">4. Downstream Arrival Modeling</span>
                 <span className="px-2 py-0.5 bg-black text-[#FFE500] font-bold rounded">Step 4</span>
               </div>
               <p className="text-editorial-muted leading-relaxed">
-                AquaLens calculates river water speed (1.6 km/h) to predict when the toxic water will reach town. It automatically alerts drinking water plants and hospitals hours before anyone drinks it.
+                AquaLens calculates river water speed (1.6 km/h) to predict when toxic water will reach downstream municipal assets, modeling exposure risk hours before contact occurs.
               </p>
             </div>
           </div>
@@ -565,10 +565,10 @@ export default function SentinelPlatform() {
               <span>International Medical Informatics Standard</span>
             </div>
             <h3 className="text-2xl font-bold uppercase tracking-tight font-sans text-white">
-              Export Live Hospital Early-Warning Record
+              Export Clinical Health Observation Record
             </h3>
             <p className="text-xs sm:text-sm text-[#AAAAAA] leading-relaxed">
-              Instantly view and download the official HL7 FHIR R4 medical data bundle that alerts hospital emergency rooms about this river contamination.
+              Instantly view and download the standardized HL7 FHIR R4 clinical observation bundle linking water toxins to LOINC and ICD-10 medical codes.
             </p>
           </div>
 
@@ -577,7 +577,7 @@ export default function SentinelPlatform() {
               onClick={() => setIsFhirOpen(true)}
               className="px-6 py-3.5 rounded-full bg-[#FFE500] hover:bg-white text-black font-mono font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-softPill"
             >
-              <span>View Hospital Alert Data</span>
+              <span>View Clinical FHIR Data</span>
             </button>
             <button
               onClick={() => setIsDossierOpen(true)}
